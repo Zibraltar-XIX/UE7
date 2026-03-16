@@ -50,16 +50,6 @@ p {
     text-decoration: none;
 }
 
-.icon-count {
-    background-color: #ff0000;
-    color: #fff;
-    float: right;
-    font-size: 11px;
-    left: -25px;
-    padding: 2px;
-    position: relative;
-}
-
 /* End */
 
 /* Sidenav */
@@ -165,6 +155,31 @@ p {
 
 .main .card .row span:last-child {
     flex: 1;
+}
+
+.main .card input[type="file"] {
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.main .card .file-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.main .card button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.main .card button:hover {
+    background-color: #0056b3;
 }
 
 .main .card .card-body {
