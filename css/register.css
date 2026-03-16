@@ -11,98 +11,116 @@ body {
 
 .container {
     width: 100%;
-    max-width: 800px;
+    max-width: 600px;
     background: #fff;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
+    margin: 20px;
 }
 
 h1 {
     text-align: center;
     color: #333;
     margin-top: 0;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
-/* Nouvelles règles pour l'affichage en ligne */
 .form-row {
     display: flex;
-    gap: 20px;
+    gap: 15px;
     margin-bottom: 15px;
 }
 
 .form-group {
     margin-bottom: 15px;
-    flex: 1; /* Chaque colonne prend la même largeur */
+    flex: 1;
 }
 
 label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     font-weight: bold;
+    color: #555;
 }
 
 input[type="text"],
 input[type="email"],
 input[type="tel"],
-textarea,
-select {
+input[type="date"],
+input[type="password"] {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-sizing: border-box; /* Assure que le padding n'augmente pas la largeur totale */
+    box-sizing: border-box;
 }
 
-/* Style de la checkbox */
-.checkbox-group {
+/* Styles pour le choix du type d'utilisateur */
+.user-type-group {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    border: 1px solid #eee;
+}
+
+.user-type-group > label {
+    text-align: center;
+    margin-bottom: 10px;
+    display: block;
+    width: 100%;
+}
+
+.radio-options {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+.radio-options label {
     display: flex;
     align-items: center;
-    gap: 10px;
-    justify-content: flex-start;
-}
-
-.checkbox-group input[type="checkbox"] {
-    width: auto;
-    margin: 0;
-}
-
-.checkbox-group label {
-    margin: 0;
+    gap: 8px;
     font-weight: normal;
+    cursor: pointer;
+    margin: 0;
+}
+
+.radio-options input[type="radio"] {
+    margin: 0;
+    width: auto;
+    cursor: pointer;
+    transform: scale(1.2); /* Légèrement plus grand */
 }
 
 button {
     width: 100%;
-    margin-top: 10px;
     padding: 12px;
-    background-color: #28a745;
+    background-color: #007bff;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
+    font-weight: bold;
+    margin-top: 10px;
 }
 
 button:hover {
-    background-color: #218838;
+    background-color: #0056b3;
 }
 
 /* Media Query pour le responsive */
 @media (max-width: 600px) {
+    .container {
+        margin: 10px;
+        padding: 15px;
+    }
+
     .form-row {
         flex-direction: column;
         gap: 0;
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-    .container {
-        padding: 15px;
-        margin: 10px;
     }
 }
