@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Page</title>
+
+    <!-- Custom Css -->
+    <link rel="stylesheet" href="../css/profiles.css">
+
+    <!-- FontAwesome 5 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar top -->
+    <div class="navbar-top">
+        <div class="title">
+            <h1>Profile</h1>
+        </div>
+
+        <!-- Navbar -->
+        <ul>
+            <li>
+                <a href="#sign-out">
+                    <i class="fa fa-sign-out-alt fa-2x"></i>
+                </a>
+            </li>
+        </ul>
+        <!-- End -->
+    </div>
+    <!-- End -->
+
+    <!-- Sidenav -->
+    <div class="sidenav">
+        <div class="profile">
+            <img src="" alt="" width="100" height="100">
+
+            <div class="name">
+            </div>
+            <div class="job">
+            </div>
+        </div>
+
+        <div class="sidenav-url">
+            <div class="url">
+                <a href="#profile" class="active">Profile</a>
+                <hr align="center">
+            </div>
+        </div>
+    </div>
+    <!-- End -->
+
+    <!-- Main -->
+    <div class="main">
+        <h2>IDENTITY</h2>
+        <div class="card">
+            <div class="card-body">
+                <i class="fa fa-pen fa-xs edit" onclick="toggleEdit(this)"></i>
+                <div class="row">
+                    <span>Name :</span>
+                    <span></span>
+                </div>
+                <div class="row">
+                    <span>Email :</span>
+                    <span></span>
+                </div>
+                <div class="row">
+                    <span>Address :</span>
+                    <span></span>
+                </div>
+                <div class="row">
+                    <span>Hobbies :</span>
+                    <span></span>
+                </div>
+                <div class="row">
+                    <span>Job recherché :</span>
+                    <span></span>
+                </div>
+                <div class="row">
+                    <span>Skill :</span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+
+        <h2>DESCRIPTION</h2>
+        <div class="card">
+            <div class="card-body">
+                <i class="fa fa-pen fa-xs edit" onclick="toggleEditDesc(this)"></i>
+                <p></p>
+            </div>
+        </div>
+
+        <h2>WEBSITES</h2>
+        <div class="card">
+            <div class="card-body">
+                <i class="fa fa-pen fa-xs edit" onclick="toggleEdit(this)"></i>
+                <div class="row">
+                    <span>Linkdin :</span>
+                    <span></span>
+                </div>
+                <div class="row">
+                    <span>Github :</span>
+                    <span></span>
+                </div>
+                <div class="row">
+                    <span>Portfolio :</span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+
+        <h2>DOCUMENTS</h2>
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <span>CV :</span>
+                    <div class="file-input">
+                        <input type="file" id="cv">
+                        <button onclick="viewFile('cv')">View</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <span>Lettre de motivation :</span>
+                    <div class="file-input">
+                        <input type="file" id="lettre">
+                        <button onclick="viewFile('lettre')">View</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End -->
+    <script>
+        function toggleEdit(icon) {
+            const cardBody = icon.parentElement;
+            const spans = cardBody.querySelectorAll('.row span:last-child');
+            spans.forEach(span => {
+                if (span.contentEditable === 'true') {
+                    span.contentEditable = 'false';
+                    span.style.backgroundColor = '';
+                } else {
+                    span.contentEditable = 'true';
+                    span.style.backgroundColor = '#f0f0f0';
+                }
+            });
+        }
+
+        function toggleEditDesc(icon) {
+            const cardBody = icon.parentElement;
+            const p = cardBody.querySelector('p');
+            if (p.contentEditable === 'true') {
+                p.contentEditable = 'false';
+                p.style.backgroundColor = '';
+            } else {
+                p.contentEditable = 'true';
+                p.style.backgroundColor = '#f0f0f0';
+            }
+        }
+
+        function viewFile(id) {
+            const input = document.getElementById(id);
+            if (input.files[0]) {
+                const url = URL.createObjectURL(input.files[0]);
+                window.open(url, '_blank');
+            } else {
+                alert('No file selected');
+            }
+        }
+    </script>
+</body>
+</html>
