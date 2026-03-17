@@ -1,4 +1,9 @@
 services:
+  web-app:
+    image: alternance-tah-les-fous:latest
+    restart: always
+    ports:
+        - "80:5000"
 
   db:
     image: mysql:9.6
