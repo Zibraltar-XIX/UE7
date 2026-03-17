@@ -1,12 +1,7 @@
 import os
 from flask import Flask, render_template, request, jsonify
 
-# Récupérer le chemin du répertoire courant et aller au bon dossier
-basedir = os.path.abspath(os.path.dirname(__file__))
-template_dir = os.path.join(os.path.dirname(basedir), 'html')
-static_dir = os.path.join(os.path.dirname(basedir), 'css')
-
-app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
+app = Flask(__name__, template_folder="./site/html")
 
 # Stockage temporaire des données de profil (remplacer par DB plus tard)
 profile_data = {
