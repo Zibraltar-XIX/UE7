@@ -1,0 +1,14 @@
+services:
+  web-app:
+    image: alternance-tah-les-fous:latest
+    restart: always
+    ports:
+        - "80:5000"
+
+  db:
+    image: mysql:9.6
+    restart: always
+    environment:
+      MYSQL_USER: alternance
+      MYSQL_PASSWORD: mdptahlesfous
+      MYSQL_DATABASE:
