@@ -9,6 +9,11 @@ services:
     image: mysql:9.6
     restart: always
     environment:
+      MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_USER: alternance
       MYSQL_PASSWORD: mdptahlesfous
-      MYSQL_DATABASE:
+    ports:
+        - "3306:3306"
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d
