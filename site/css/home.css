@@ -4,7 +4,7 @@
     height: 100vh;
     background-color: rgba(0, 0, 0, 0.644);
     background-blend-mode: color;
-    background-image: url(/src/background-accueil.jpg);
+    background-image: url(/site/src/background-accueil.jpg);
     background-repeat: no-repeat;
     background-size: cover ;
     background-position: center;
