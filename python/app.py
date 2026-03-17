@@ -1,4 +1,5 @@
 import os
+import mysql.connector
 from flask import Flask, render_template, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 
@@ -11,9 +12,20 @@ upload_base_dir = os.path.join(basedir, '..', 'site', 'uploads')
 # Créer le dossier de base des uploads s'il n'existe pas
 os.makedirs(upload_base_dir, exist_ok=True)
 
-app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
+app = Flask(__name__, template_folder="../site/html", static_folder='../site/css')
 app.config['UPLOAD_FOLDER'] = upload_base_dir
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
+
+
+def db_connection():
+    conn = mysql.connector.connect(
+        host="127.0.0.1",
+        user="alternance",
+        password="mdptahlesfou",
+        database="main"
+    )
+    return conn
+
 
 # Stockage temporaire des données de profil (remplacer par DB plus tard)
 profile_data = {
@@ -78,6 +90,19 @@ def save_profile():
     profile_data['lettre'] = _save_upload('lettre', 'lettres')
 
     return jsonify({'status': 'success'})
+
+@app.route('/register', methods=['GET'])
+def register():
+    return render_template('register.html')
+
+@app.route('/register', methods=['POST'])
+def save_register():
+    data = request.get_json()
+    conn = db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("INSERT INTO user (`First-Name`, `Last-Name`, phone, email, Role, adresse, password) VALUES (%s, %s, %s, %s, %s, %s, %s)", (data.get('prenom'), data.get('nom'), data.get('numero'), data.get('email'), data.get('user_type'), data.get('adresse', ''), data.get('password')))
+    return jsonify({'status': 'success'})
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
