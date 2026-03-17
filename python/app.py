@@ -26,20 +26,13 @@ def home():
 def profile():
     return render_template('profiles.html', data=profile_data)
 
-@app.route('/save_profile', methods=['POST', 'OPTIONS'])
+@app.route('/save_profile', methods=['POST'])
 def save_profile():
-    if request.method == 'OPTIONS':
-        return '', 200
-    
-    try:
-        data = request.get_json()
-        global profile_data
-        profile_data.update(data)
-        print("Données sauvegardées:", profile_data)  # Pour déboguer
-        return jsonify({'status': 'success'})
-    except Exception as e:
-        print("Erreur:", str(e))  # Pour déboguer
-        return jsonify({'status': 'error', 'message': str(e)}), 400
+    data = request.get_json()
+    global profile_data
+    profile_data.update(data)
+    print("Données sauvegardées:", profile_data)  # Pour déboguer
+    return jsonify({'status': 'success'})
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
