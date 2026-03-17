@@ -4,4 +4,6 @@ services:
     image: mysql:9.6
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD:
+      MYSQL_USER: alternance
+      MYSQL_PASSWORD: mdptahlesfous
+      MYSQL_DATABASE:
