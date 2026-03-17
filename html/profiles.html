@@ -61,27 +61,27 @@
                 <i class="fa fa-pen fa-xs edit" onclick="toggleEdit(this)"></i>
                 <div class="row">
                     <span>Name :</span>
-                    <span></span>
+                    <span id="name">{{ data.name }}</span>
                 </div>
                 <div class="row">
                     <span>Email :</span>
-                    <span></span>
+                    <span id="email">{{ data.email }}</span>
                 </div>
                 <div class="row">
                     <span>Address :</span>
-                    <span></span>
+                    <span id="address">{{ data.address }}</span>
                 </div>
                 <div class="row">
                     <span>Hobbies :</span>
-                    <span></span>
+                    <span id="hobbies">{{ data.hobbies }}</span>
                 </div>
                 <div class="row">
                     <span>Job recherché :</span>
-                    <span></span>
+                    <span id="job">{{ data.job }}</span>
                 </div>
                 <div class="row">
                     <span>Skills :</span>
-                    <span></span>
+                    <span id="skills">{{ data.skills }}</span>
                 </div>
             </div>
         </div>
@@ -91,7 +91,7 @@
             <div class="card-body">
                 <!-- Icône d'édition pour la description -->
                 <i class="fa fa-pen fa-xs edit" onclick="toggleEditDesc(this)"></i>
-                <p></p>
+                <p id="description">{{ data.description }}</p>
             </div>
         </div>
 
@@ -102,15 +102,15 @@
                 <i class="fa fa-pen fa-xs edit" onclick="toggleEdit(this)"></i>
                 <div class="row">
                     <span>Linkdin :</span>
-                    <span></span>
+                    <span id="linkedin">{{ data.linkedin }}</span>
                 </div>
                 <div class="row">
                     <span>Github :</span>
-                    <span></span>
+                    <span id="github">{{ data.github }}</span>
                 </div>
                 <div class="row">
                     <span>Portfolio :</span>
-                    <span></span>
+                    <span id="portfolio">{{ data.portfolio }}</span>
                 </div>
             </div>
         </div>
@@ -134,6 +134,7 @@
                 </div>
             </div>
         </div>
+        <button onclick="saveProfile()">Save Profile</button>
     </div>
     <!-- End -->
     <script>
@@ -188,6 +189,42 @@
                 const url = URL.createObjectURL(input.files[0]);
                 document.querySelector('.profile img').src = url;
             }
+        }
+
+        // Fonction pour sauvegarder le profil en envoyant les données au serveur
+        function saveProfile() {
+            const data = {
+                name: document.getElementById('name').textContent.trim(),
+                email: document.getElementById('email').textContent.trim(),
+                address: document.getElementById('address').textContent.trim(),
+                hobbies: document.getElementById('hobbies').textContent.trim(),
+                job: document.getElementById('job').textContent.trim(),
+                skills: document.getElementById('skills').textContent.trim(),
+                description: document.getElementById('description').textContent.trim(),
+                linkedin: document.getElementById('linkedin').textContent.trim(),
+                github: document.getElementById('github').textContent.trim(),
+                portfolio: document.getElementById('portfolio').textContent.trim()
+            };
+
+            fetch('/save_profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    alert('Profile saved successfully!');
+                } else {
+                    alert('Error saving profile.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving profile.');
+            });
         }
     </script>
 </body>
