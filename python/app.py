@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, request, jsonify
 
-app = Flask(__name__, template_folder="./site/html")
+app = Flask(__name__, template_folder="../site/html", static_folder='../site/css')
 
 # Stockage temporaire des données de profil (remplacer par DB plus tard)
 profile_data = {
