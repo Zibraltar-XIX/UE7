@@ -1,3 +1,5 @@
 .idea
 .env
 /mysql_data
+.vscode
+node_modules
