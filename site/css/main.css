@@ -1,27 +1,15 @@
-/* Styles de base */
 body {
-  font-family: system-ui, sans-serif;
-  line-height: 1.5;
+  height: 100%;
+  font-family: DM Sans, sans-serif;
   margin: 0;
   padding: 0;
   background: #f8f9fb;
   color: #1a1a1a;
 }
 
-header {
-  background: #2a75bb;
-  color: white;
-  padding: 1rem 1.5rem;
-}
-
-header h1 {
-  margin: 0 0 0.5rem;
-  font-size: 1.5rem;
-}
-
 nav ul {
   display: flex;
-  gap: 1rem;
+  gap: 120px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -34,21 +22,9 @@ nav a {
 }
 
 nav a:hover {
-  text-decoration: underline;
-}
-
-main {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 0 1.5rem;
-}
-
-section {
-  margin-bottom: 2rem;
-  padding: 1.25rem;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: 0.2s ease-in-out;
+  color: rgb(74, 189, 238);
+  text-shadow: 0.5px 0.5px 40px rgb(74, 189, 238);
 }
 
 section h2 {
@@ -62,4 +38,32 @@ ul {
 
 li {
   margin-bottom: 0.5rem;
+}
+
+footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  margin-top: 20px;
+  text-decoration: none;
+  background-color: rgb(255, 255, 255);
+}
+
+footer ul {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+footer a {
+  color: rgb(61, 61, 61);
+  text-decoration: none;
+}
+
+footer a:hover {
+  transition: 0.2s ease-in-out;
+  color: rgb(74, 189, 238);
 }
