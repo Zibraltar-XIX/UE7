@@ -65,12 +65,20 @@
                 <!-- Icône d'édition pour rendre les champs modifiables -->
                 <i class="fa fa-pen fa-xs edit" onclick="toggleEdit(this)"></i>
                 <div class="row">
-                    <span>Name :</span>
-                    <span id="name">{{ data.name }}</span>
+                    <span>Last Name :</span>
+                    <span id="lastname">{{ data.lastname }}</span>
+                </div>
+                <div class="row">
+                    <span>First Name :</span>
+                    <span id="firstname">{{ data.firstname }}</span>
                 </div>
                 <div class="row">
                     <span>Email :</span>
                     <span id="email">{{ data.email }}</span>
+                </div>
+                <div class="row">
+                    <span>Phone :</span>
+                    <span id="phone">{{ data.phone }}</span>
                 </div>
                 <div class="row">
                     <span>Address :</span>
@@ -213,8 +221,10 @@
             const formData = new FormData();
 
             // Ajouter les champs texte
-            formData.append('name', document.getElementById('name').textContent.trim());
+            formData.append('lastname', document.getElementById('lastname').textContent.trim());
+            formData.append('firstname', document.getElementById('firstname').textContent.trim());
             formData.append('email', document.getElementById('email').textContent.trim());
+            formData.append('phone', document.getElementById('phone').textContent.trim());
             formData.append('address', document.getElementById('address').textContent.trim());
             formData.append('hobbies', document.getElementById('hobbies').textContent.trim());
             formData.append('job', document.getElementById('job').textContent.trim());
