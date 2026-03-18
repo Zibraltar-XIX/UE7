@@ -7,10 +7,9 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Connexion MySQL (adapte tes creds)
 const db = mysql.createConnection({
   host: '127.0.0.1',
-  user: 'amternance',
+  user: 'alternance',
   password: 'mdptahlesfous',
   database: 'main'
 });
