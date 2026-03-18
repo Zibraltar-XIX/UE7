@@ -1,6 +1,8 @@
 services:
   web-app:
-    image: alternance-tah-les-fous:latest
+    build:
+      context: .
+      dockerfile: app/Dockerfile
     restart: always
     ports:
         - "80:5000"
