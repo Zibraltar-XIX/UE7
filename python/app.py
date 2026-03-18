@@ -1,6 +1,6 @@
 import os
 import mysql.connector
-from flask import Flask, render_template, request, jsonify, send_from_directory, make_response, send_file
+from flask import Flask, render_template, request, jsonify, send_from_directory, make_response, send_file, make_response, redirect
 from werkzeug.utils import secure_filename
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -47,8 +47,11 @@ profile_data = {
 
 @app.route('/uploads/<category>/<filename>')
 def uploaded_file(category, filename):
-    directory = os.path.join(str(app.config['UPLOAD_FOLDER']), category)
-    return send_from_directory(directory, filename)
+    # Serve a file from the uploads folder
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], category, filename)
+    if not os.path.exists(file_path):
+        return "File not found", 404
+    return send_file(file_path)
 
 
 @app.route('/css/<path:filename>')

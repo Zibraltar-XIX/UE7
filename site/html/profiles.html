@@ -5,19 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Page</title>
 
+    <!-- Custom Css -->
     <link rel="stylesheet" href="../css/profiles.css">
 
-
+    <!-- FontAwesome 5 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
 </head>
 <body>
-
+    <!-- Navbar top -->
     <div class="navbar-top">
         <div class="title">
             <h1>Profile</h1>
         </div>
 
-
+        <!-- Navbar -->
         <ul>
             <li>
                 <a href="/">
@@ -25,14 +26,14 @@
                 </a>
             </li>
             <li>
-                <a href="#sign-out">
+                <a href="#" onclick="signOut()">
                     <i class="fa fa-sign-out-alt fa-2x"></i>
                 </a>
             </li>
         </ul>
-  
+        <!-- End -->
     </div>
-
+    <!-- End -->
 
     <div class="sidenav">
         <div class="profile">
@@ -220,6 +221,7 @@
             const formData = new FormData();
 
             // Ajouter les champs texte
+            formData.append('id', document.cookie.split('; ').find(row => row.startsWith('user_id=')).split('=')[1]);
             formData.append('lastname', document.getElementById('lastname').textContent.trim());
             formData.append('firstname', document.getElementById('firstname').textContent.trim());
             formData.append('email', document.getElementById('email').textContent.trim());
@@ -266,6 +268,11 @@
                 console.error('Error:', error);
                 alert('Error saving profile.');
             });
+        }
+
+        // Fonction pour se déconnecter
+        function signOut() {
+            window.location.href = '/logout';
         }
     </script>
 </body>
