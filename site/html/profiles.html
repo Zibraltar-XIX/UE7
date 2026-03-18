@@ -38,7 +38,7 @@
     <div class="sidenav">
         <div class="profile">
             <!-- Image de profil cliquable pour uploader une nouvelle -->
-            <img src="{{ data.profile_pic.path or '' }}" alt="" width="100" height="100" onclick="uploadProfilePic()">
+            <img src="{{ data.PdP.path or '' }}" alt="" width="100" height="100" onclick="uploadProfilePic()">
             <!-- Input caché pour sélectionner le fichier image -->
             <input type="file" id="profile-pic-input" style="display: none;" accept="image/*" onchange="changeProfilePic(this)">
 
@@ -66,35 +66,35 @@
                 <i class="fa fa-pen fa-xs edit" onclick="toggleEdit(this)"></i>
                 <div class="row">
                     <span>Last Name :</span>
-                    <span id="lastname">{{ data.lastname }}</span>
+                    <span id="Nom">{{ data.lastname }}</span>
                 </div>
                 <div class="row">
                     <span>First Name :</span>
-                    <span id="firstname">{{ data.firstname }}</span>
+                    <span id="Prenom">{{ data.firstname }}</span>
                 </div>
                 <div class="row">
                     <span>Email :</span>
-                    <span id="email">{{ data.email }}</span>
+                    <span id="Email">{{ data.email }}</span>
                 </div>
                 <div class="row">
                     <span>Phone :</span>
-                    <span id="phone">{{ data.phone }}</span>
+                    <span id="Telephone">{{ data.phone }}</span>
                 </div>
                 <div class="row">
                     <span>Address :</span>
-                    <span id="address">{{ data.address }}</span>
+                    <span id="Address">{{ data.address }}</span>
                 </div>
                 <div class="row">
                     <span>Hobbies :</span>
-                    <span id="hobbies">{{ data.hobbies }}</span>
+                    <span id="Hobbies">{{ data.hobbies }}</span>
                 </div>
                 <div class="row">
                     <span>Job recherché :</span>
-                    <span id="job">{{ data.job }}</span>
+                    <span id="Jobs">{{ data.job }}</span>
                 </div>
                 <div class="row">
                     <span>Skills :</span>
-                    <span id="skills">{{ data.skills }}</span>
+                    <span id="Skills">{{ data.skills }}</span>
                 </div>
             </div>
         </div>
@@ -104,7 +104,7 @@
             <div class="card-body">
                 <!-- Icône d'édition pour la description -->
                 <i class="fa fa-pen fa-xs edit" onclick="toggleEditDesc(this)"></i>
-                <p id="description">{{ data.description }}</p>
+                <p id="Description">{{ data.description }}</p>
             </div>
         </div>
 
@@ -115,15 +115,15 @@
                 <i class="fa fa-pen fa-xs edit" onclick="toggleEdit(this)"></i>
                 <div class="row">
                     <span>Linkdin :</span>
-                    <span id="linkedin">{{ data.linkedin }}</span>
+                    <span id="Linkedin">{{ data.linkedin }}</span>
                 </div>
                 <div class="row">
                     <span>Github :</span>
-                    <span id="github">{{ data.github }}</span>
+                    <span id="Github">{{ data.github }}</span>
                 </div>
                 <div class="row">
                     <span>Portfolio :</span>
-                    <span id="portfolio">{{ data.portfolio }}</span>
+                    <span id="Portfolio">{{ data.portfolio }}</span>
                 </div>
             </div>
         </div>
@@ -190,10 +190,10 @@
 
             // Si aucun fichier local sélectionné, on tente d'ouvrir le fichier déjà sauvegardé
             let savedPath = '';
-            if (id === 'cv' && '{{ data.cv.path or "" }}') {
-                savedPath = '{{ data.cv.path }}';
-            } else if (id === 'lettre' && '{{ data.lettre.path or "" }}') {
-                savedPath = '{{ data.lettre.path }}';
+            if (id === 'cv' && '{{ data.CV.path or "" }}') {
+                savedPath = '{{ data.CV.path }}';
+            } else if (id === 'lettre' && '{{ data.LM.path or "" }}') {
+                savedPath = '{{ data.LM.path }}';
             }
             if (savedPath) {
                 window.open(savedPath, '_blank');
@@ -222,18 +222,18 @@
 
             // Ajouter les champs texte
             formData.append('id', document.cookie.split('; ').find(row => row.startsWith('user_id=')).split('=')[1]);
-            formData.append('lastname', document.getElementById('lastname').textContent.trim());
-            formData.append('firstname', document.getElementById('firstname').textContent.trim());
-            formData.append('email', document.getElementById('email').textContent.trim());
-            formData.append('phone', document.getElementById('phone').textContent.trim());
-            formData.append('address', document.getElementById('address').textContent.trim());
-            formData.append('hobbies', document.getElementById('hobbies').textContent.trim());
-            formData.append('job', document.getElementById('job').textContent.trim());
-            formData.append('skills', document.getElementById('skills').textContent.trim());
-            formData.append('description', document.getElementById('description').textContent.trim());
-            formData.append('linkedin', document.getElementById('linkedin').textContent.trim());
-            formData.append('github', document.getElementById('github').textContent.trim());
-            formData.append('portfolio', document.getElementById('portfolio').textContent.trim());
+            formData.append('Nom', document.getElementById('Nom').textContent.trim());
+            formData.append('Prenom', document.getElementById('Prenom').textContent.trim());
+            formData.append('Email', document.getElementById('Email').textContent.trim());
+            formData.append('Telephone', document.getElementById('Telephone').textContent.trim());
+            formData.append('Adresse', document.getElementById('Adresse').textContent.trim());
+            formData.append('Hobbies', document.getElementById('Hobbies').textContent.trim());
+            formData.append('Jobs', document.getElementById('Jobs').textContent.trim());
+            formData.append('Skills', document.getElementById('Skills').textContent.trim());
+            formData.append('Description', document.getElementById('Description').textContent.trim());
+            formData.append('Linkedin', document.getElementById('Linkedin').textContent.trim());
+            formData.append('Github', document.getElementById('Github').textContent.trim());
+            formData.append('Portfolio', document.getElementById('Portfolio').textContent.trim());
 
             // Ajouter les fichiers
             const profilePicInput = document.getElementById('profile-pic-input');
