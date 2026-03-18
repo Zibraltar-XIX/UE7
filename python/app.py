@@ -1,17 +1,25 @@
 import os
 import mysql.connector
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__, template_folder="../site/html", static_folder='../site', static_url_path='/site')
-app.config['UPLOAD_FOLDER'] = "../site/uploads"
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+SITE_DIR = os.path.join(BASE_DIR, "site")
+
+app = Flask(
+    __name__,
+    template_folder=os.path.join(SITE_DIR, "html"),
+    static_folder=SITE_DIR,
+    static_url_path='/site'
+)
+app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
 def db_connection():
     conn = mysql.connector.connect(
         host="db",
         user="alternance",
-        password="mdptahlesfous",
+        password="mdptahlesfou",
         database="main"
     )
     return conn
@@ -36,11 +44,25 @@ profile_data = {
 
 @app.route('/uploads/<category>/<filename>')
 def uploaded_file(category, filename):
-    # Serve a file from the uploads folder
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], category, filename)
-    if not os.path.exists(file_path):
-        return "File not found", 404
-    return send_file("../site/uploads/")
+    upload_root = str(app.config['UPLOAD_FOLDER'])
+    directory = os.path.join(upload_root, category)
+    return send_from_directory(directory, filename)
+
+
+# Supporte les liens relatifs existants dans les templates (../css, ../src, ../uploads)
+@app.route('/css/<path:filename>')
+def css_file(filename):
+    return send_from_directory(os.path.join(SITE_DIR, 'css'), filename)
+
+
+@app.route('/src/<path:filename>')
+def src_file(filename):
+    return send_from_directory(os.path.join(SITE_DIR, 'src'), filename)
+
+
+@app.route('/uploads/<path:filename>')
+def uploads_file(filename):
+    return send_from_directory(os.path.join(SITE_DIR, 'uploads'), filename)
 
 @app.route('/')
 def home():
@@ -49,6 +71,16 @@ def home():
 @app.route('/profile')
 def profile():
     return render_template('profiles.html', data=profile_data)
+
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+
+@app.route('/formulaire')
+def formulaire():
+    return render_template('formulaire.html')
 
 def _save_upload(field_name: str, category: str) -> dict:
     """Save uploaded file and return its stored path + filename."""
@@ -97,11 +129,12 @@ def save_register():
          return jsonify({'status': 'failed', 'message': 'Missing required fields'}), 400
 
     conn = None
+    cursor = None
     try:
         conn = db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO user (`First-Name`, `Last-Name`, phone, email, Role, adresse, password) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            "INSERT INTO Utilisateurs (`Prenom`, `Nom`, Telephone, Email, Role, Adresse, MotDePasse) VALUES (%s, %s, %s, %s, %s, %s, %s)",
             (
                 data['prenom'],
                 data['nom'],
@@ -120,8 +153,9 @@ def save_register():
         return jsonify({'status': 'failed', 'message': str(err)}), 500
         
     finally:
-        if conn and conn.is_connected():
+        if cursor:
             cursor.close()
+        if conn and conn.is_connected():
             conn.close()
 
 

@@ -12,11 +12,8 @@ services:
   db:
     image: mysql:9.6
     restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: mdptahlesfous
-      MYSQL_DATABASE: main
-      MYSQL_USER: alternance
-      MYSQL_PASSWORD: mdptahlesfous
+    env_file:
+      - .env
     ports:
         - "3306:3306"
     volumes:
