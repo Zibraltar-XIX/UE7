@@ -47,10 +47,18 @@ profile_data = {
 
 @app.route('/uploads/<category>/<filename>')
 def uploaded_file(category, filename):
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], category, filename)
-    if not os.path.exists(file_path):
-        return "File not found", 404
-    return send_file(file_path)
+    directory = os.path.join(str(app.config['UPLOAD_FOLDER']), category)
+    return send_from_directory(directory, filename)
+
+
+@app.route('/css/<path:filename>')
+def css_file(filename):
+    return send_from_directory(os.path.join(SITE_DIR, 'css'), filename)
+
+
+@app.route('/src/<path:filename>')
+def src_file(filename):
+    return send_from_directory(os.path.join(SITE_DIR, 'src'), filename)
 
 @app.route('/')
 def home():
