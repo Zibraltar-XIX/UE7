@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS `Utilisateurs` (
   `Telephone` varchar(20) DEFAULT NULL,
   `Email` tinytext,
   `Role` varchar(20) DEFAULT NULL,
-  `MotDePass` varchar(255) DEFAULT NULL,
+  `MotDePasse` varchar(255) DEFAULT NULL,
   `Adresse` text,
   `Web` text,
   `Hobbies` text,
