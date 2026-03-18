@@ -27,8 +27,11 @@ def db_connection():
 
 # Stockage temporaire des données de profil (remplacer par DB plus tard)
 profile_data = {
-    'name': '',
+    'id': '',
+    'lastname': '',
+    'firstname': '',
     'email': '',
+    'phone': '',
     'address': '',
     'hobbies': '',
     'job': '',
@@ -103,14 +106,19 @@ def save_profile():
     global profile_data
 
     # Champs texte
-    for key in ('name', 'email', 'address', 'hobbies', 'job', 'skills', 'description', 'linkedin', 'github', 'portfolio'):
+    for key in ('id', 'lastname', 'firstname', 'email', 'phone', 'address', 'hobbies', 'job', 'skills', 'description', 'linkedin', 'github', 'portfolio'):
         profile_data[key] = request.form.get(key, '')
 
     # Fichiers
     profile_data['profile_pic'] = _save_upload('profile_pic', 'profile_pics')
     profile_data['cv'] = _save_upload('cv', 'cv')
     profile_data['lettre'] = _save_upload('lettre', 'lettres')
-
+    print("Profile data updated:", profile_data)  # Debug log
+    conn = db_connection()
+    cursor = conn.cursor(dictionary=True)
+    for data in profile_data:
+        if profile_data[data] != "" and data != "id":
+            cursor.execute("UPDATE user SET {} = %s WHERE id = %s".format(data), (profile_data[data], profile_data['id']))
     return jsonify({'status': 'success'})
 
 @app.route('/register', methods=['GET'])
