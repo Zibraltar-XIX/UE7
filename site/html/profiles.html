@@ -221,7 +221,7 @@
             const formData = new FormData();
 
             // Ajouter les champs texte
-            formData.append('id', document.cookie.split('; ').find(row => row.startsWith('User_ID=')).split('=')[1]);
+            formData.append('id', document.cookie.split('; ').find(row => row.startsWith('UserID=')).split('=')[1]);
             formData.append('Nom', document.getElementById('Nom').textContent.trim());
             formData.append('Prenom', document.getElementById('Prenom').textContent.trim());
             formData.append('Email', document.getElementById('Email').textContent.trim());
