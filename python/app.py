@@ -200,7 +200,11 @@ def save_register():
         if conn and conn.is_connected():
             conn.close()
 
-
+@app.route('/logout')
+def logout():
+    response = make_response(redirect('/'))
+    response.delete_cookie('user_id')
+    return response
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
