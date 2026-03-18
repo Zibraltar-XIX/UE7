@@ -203,7 +203,7 @@ def save_register():
 @app.route('/logout')
 def logout():
     response = make_response(redirect('/'))
-    response.delete_cookie('user_id')
+    response.delete_cookie('UserID')
     return response
 
 if __name__ == '__main__':

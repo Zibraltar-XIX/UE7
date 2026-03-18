@@ -82,7 +82,7 @@
                 </div>
                 <div class="row">
                     <span>Address :</span>
-                    <span id="Address">{{ data.address }}</span>
+                    <span id="Adresse">{{ data.adresse }}</span>
                 </div>
                 <div class="row">
                     <span>Hobbies :</span>
@@ -221,7 +221,7 @@
             const formData = new FormData();
 
             // Ajouter les champs texte
-            formData.append('id', document.cookie.split('; ').find(row => row.startsWith('user_id=')).split('=')[1]);
+            formData.append('id', document.cookie.split('; ').find(row => row.startsWith('User_ID=')).split('=')[1]);
             formData.append('Nom', document.getElementById('Nom').textContent.trim());
             formData.append('Prenom', document.getElementById('Prenom').textContent.trim());
             formData.append('Email', document.getElementById('Email').textContent.trim());
