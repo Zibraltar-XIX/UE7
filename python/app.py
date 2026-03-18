@@ -94,6 +94,9 @@ def home():
 
 @app.route('/profile', methods=['POST', 'GET'])
 def profile():
+    user_id = request.cookies.get('UserID')
+    if not user_id:
+        return redirect('/')
     return render_template('profiles.html', data=profile_data)
 
 
