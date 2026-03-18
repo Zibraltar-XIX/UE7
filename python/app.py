@@ -1,25 +1,23 @@
 import os
 import mysql.connector
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 
-# Configuration des chemins
-basedir = os.path.abspath(os.path.dirname(__file__))
-template_dir = os.path.join(basedir, '..', 'site', 'html')
-static_dir = os.path.join(basedir, '..', 'site', 'css')
-upload_base_dir = os.path.join(basedir, '..', 'site', 'uploads')
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+SITE_DIR = os.path.join(BASE_DIR, "site")
 
-# Créer le dossier de base des uploads s'il n'existe pas
-os.makedirs(upload_base_dir, exist_ok=True)
-
-app = Flask(__name__, template_folder="../site/html", static_folder='../site/css')
-app.config['UPLOAD_FOLDER'] = upload_base_dir
+app = Flask(
+    __name__,
+    template_folder=os.path.join(SITE_DIR, "html"),
+    static_folder=SITE_DIR,
+    static_url_path='/site'
+)
+app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
-
 
 def db_connection():
     conn = mysql.connector.connect(
-        host="127.0.0.1",
+        host="db",
         user="alternance",
         password="mdptahlesfou",
         database="main"
@@ -29,8 +27,11 @@ def db_connection():
 
 # Stockage temporaire des données de profil (remplacer par DB plus tard)
 profile_data = {
-    'name': '',
+    'id': '',
+    'lastname': '',
+    'firstname': '',
     'email': '',
+    'phone': '',
     'address': '',
     'hobbies': '',
     'job': '',
@@ -59,6 +60,16 @@ def home():
 def profile():
     return render_template('profiles.html', data=profile_data)
 
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+
+@app.route('/formulaire')
+def formulaire():
+    return render_template('formulaire.html')
+
 def _save_upload(field_name: str, category: str) -> dict:
     """Save uploaded file and return its stored path + filename."""
     file = request.files.get(field_name)
@@ -80,14 +91,19 @@ def save_profile():
     global profile_data
 
     # Champs texte
-    for key in ('name', 'email', 'address', 'hobbies', 'job', 'skills', 'description', 'linkedin', 'github', 'portfolio'):
+    for key in ('id', 'lastname', 'firstname', 'email', 'phone', 'address', 'hobbies', 'job', 'skills', 'description', 'linkedin', 'github', 'portfolio'):
         profile_data[key] = request.form.get(key, '')
 
     # Fichiers
     profile_data['profile_pic'] = _save_upload('profile_pic', 'profile_pics')
     profile_data['cv'] = _save_upload('cv', 'cv')
     profile_data['lettre'] = _save_upload('lettre', 'lettres')
-
+    print("Profile data updated:", profile_data)  # Debug log
+    conn = db_connection()
+    cursor = conn.cursor(dictionary=True)
+    for data in profile_data:
+        if profile_data[data] != "" and data != "id":
+            cursor.execute("UPDATE user SET {} = %s WHERE id = %s".format(data), (profile_data[data], profile_data['id']))
     return jsonify({'status': 'success'})
 
 @app.route('/register', methods=['GET'])
@@ -97,10 +113,44 @@ def register():
 @app.route('/register', methods=['POST'])
 def save_register():
     data = request.get_json()
-    conn = db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("INSERT INTO user (`First-Name`, `Last-Name`, phone, email, Role, adresse, password) VALUES (%s, %s, %s, %s, %s, %s, %s)", (data.get('prenom'), data.get('nom'), data.get('numero'), data.get('email'), data.get('user_type'), data.get('adresse', ''), data.get('password')))
-    return jsonify({'status': 'success'})
+    
+    if not data:
+        return jsonify({'status': 'failed', 'message': 'Invalid JSON data'}), 400
+
+    required_fields = ['nom', 'prenom', 'email', 'numero', 'user_type', 'password']
+    if not all(field in data for field in required_fields):
+         return jsonify({'status': 'failed', 'message': 'Missing required fields'}), 400
+
+    conn = None
+    cursor = None
+    try:
+        conn = db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO Utilisateurs (`Prenom`, `Nom`, Telephone, Email, Role, Adresse, MotDePasse) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (
+                data['prenom'],
+                data['nom'],
+                data['numero'],
+                data['email'],
+                data['user_type'],
+                data.get('adresse', ''),
+                data['password']
+            )
+        )
+        conn.commit()
+        return jsonify({'status': 'success'})
+        
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return jsonify({'status': 'failed', 'message': str(err)}), 500
+        
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
 
 
 if __name__ == '__main__':

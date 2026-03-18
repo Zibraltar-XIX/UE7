@@ -8,7 +8,7 @@
 <body>
     <div class="container">
         <h1>Inscription</h1>
-        <form action="#" method="post">
+        <form id="registerForm">
 
             <div class="form-group user-type-group">
                 <label>Je suis :</label>
@@ -66,6 +66,8 @@
                 </div>
             </div>
 
+            <div id="message" style="display:none; margin-top:15px; padding:10px; border-radius:4px;"></div>
+
             <button type="submit">S'inscrire</button>
         </form>
     </div>
@@ -74,14 +76,71 @@
         function toggleField(type) {
             const label = document.getElementById('label_ecole');
             const input = document.getElementById('ecole');
-
             if (type === 'company') {
-                label.textContent = 'Nom de l\'entreprise';
+                label.textContent = "Nom de l'entreprise";
                 input.placeholder = 'Ex: Ma Société SAS';
             } else {
                 label.textContent = 'École';
                 input.placeholder = '';
             }
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const messageDiv = document.getElementById('message');
+            messageDiv.style.display = 'none';
+
+            const formData = new FormData(this);
+            const password = formData.get('password');
+
+            if (password !== formData.get('confirm_password')) {
+                showMessage('Les mots de passe ne correspondent pas!', 'error');
+                return;
+            }
+
+            const data = Object.fromEntries(formData.entries());
+            data.adresse = data.ecole; // Mapping spécifique demandé par le backend (adresse -> ecole)
+            delete data.confirm_password;
+            delete data.ecole;
+
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('Inscription réussie! Redirection...', 'success');
+                    setTimeout(() => window.location.href = '/', 1500);
+                } else {
+                    showMessage(result.message || "Erreur lors de l'inscription", 'error');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showMessage("Une erreur technique est survenue.", 'error');
+            }
+        });
+
+        function showMessage(msg, type) {
+            const el = document.getElementById('message');
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.className = type; // Utiliser CSS pour le style (success/error)
+
+            // Fallback inline styles si pas de CSS
+            if (type === 'success') {
+                el.style.backgroundColor = '#d4edda';
+                el.style.color = '#155724';
+                el.style.borderColor = '#c3e6cb';
+            } else {
+                el.style.backgroundColor = '#f8d7da';
+                el.style.color = '#721c24';
+                el.style.borderColor = '#f5c6cb';
+            }
+            el.style.border = '1px solid';
         }
     </script>
 </body>
