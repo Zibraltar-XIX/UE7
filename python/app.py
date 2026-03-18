@@ -3,7 +3,7 @@ import mysql.connector
 from flask import Flask, render_template, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__, template_folder="../site/html", static_folder='../site/css')
+app = Flask(__name__, template_folder="../site/html", static_folder='../site', static_url_path='/site')
 app.config['UPLOAD_FOLDER'] = "../site/uploads"
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
@@ -11,7 +11,7 @@ def db_connection():
     conn = mysql.connector.connect(
         host="db",
         user="alternance",
-        password="mdptahlesfou",
+        password="mdptahlesfous",
         database="main"
     )
     return conn
@@ -87,43 +87,43 @@ def register():
 
 @app.route('/register', methods=['POST'])
 def save_register():
-    # JSON prioritaire, puis fallback formulaire classique.
-    data = request.get_json(silent=True)
+    data = request.get_json()
+    
     if not data:
-        data = request.form.to_dict()
+        return jsonify({'status': 'failed', 'message': 'Invalid JSON data'}), 400
 
-    required_fields = ('prenom', 'nom', 'numero', 'email', 'user_type', 'password')
-    missing_fields = [field for field in required_fields if not data.get(field)]
-    if missing_fields:
-        return jsonify({
-            'status': 'failed',
-            'message': f"Champs manquants: {', '.join(missing_fields)}"
-        }), 400
+    required_fields = ['nom', 'prenom', 'email', 'numero', 'user_type', 'password']
+    if not all(field in data for field in required_fields):
+         return jsonify({'status': 'failed', 'message': 'Missing required fields'}), 400
 
     conn = None
     try:
         conn = db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO user (`First-Name`, `Last-Name`, phone, email, Role, adresse, password) VALUES (%s, %s, %s, %s, %s, %s, %s)",
             (
-                data.get('prenom'),
-                data.get('nom'),
-                data.get('numero'),
-                data.get('email'),
-                data.get('user_type'),
+                data['prenom'],
+                data['nom'],
+                data['numero'],
+                data['email'],
+                data['user_type'],
                 data.get('adresse', ''),
-                data.get('password')
+                data['password']
             )
         )
         conn.commit()
+        return jsonify({'status': 'success'})
+        
     except mysql.connector.Error as err:
-        return jsonify({'status': 'failed', 'message': err.msg}), 500
+        print("Database error:", err)
+        return jsonify({'status': 'failed', 'message': str(err)}), 500
+        
     finally:
-        if conn is not None and conn.is_connected():
+        if conn and conn.is_connected():
+            cursor.close()
             conn.close()
 
-    return jsonify({'status': 'success'})
 
 
 if __name__ == '__main__':

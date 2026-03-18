@@ -76,9 +76,8 @@
         function toggleField(type) {
             const label = document.getElementById('label_ecole');
             const input = document.getElementById('ecole');
-
             if (type === 'company') {
-                label.textContent = 'Nom de l\'entreprise';
+                label.textContent = "Nom de l'entreprise";
                 input.placeholder = 'Ex: Ma Société SAS';
             } else {
                 label.textContent = 'École';
@@ -88,61 +87,60 @@
 
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            const messageDiv = document.getElementById('message');
+            messageDiv.style.display = 'none';
 
-            // Validation des mots de passe
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
+            const formData = new FormData(this);
+            const password = formData.get('password');
 
-            if (password !== confirmPassword) {
+            if (password !== formData.get('confirm_password')) {
                 showMessage('Les mots de passe ne correspondent pas!', 'error');
                 return;
             }
 
-            // Récupérer les données du formulaire
-            const formData = {
-                nom: document.getElementById('nom').value,
-                prenom: document.getElementById('prenom').value,
-                email: document.getElementById('email').value,
-                numero: document.getElementById('numero').value,
-                user_type: document.querySelector('input[name="user_type"]:checked').value,
-                password: password,
-                adresse: document.getElementById('ecole').value
-            };
+            const data = Object.fromEntries(formData.entries());
+            data.adresse = data.ecole; // Mapping spécifique demandé par le backend (adresse -> ecole)
+            delete data.confirm_password;
+            delete data.ecole;
 
             try {
                 const response = await fetch('/register', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
                 });
 
                 const result = await response.json();
 
-                if (response.ok && result.status === 'success') {
-                    showMessage('Inscription réussie!', 'success');
-                    document.getElementById('registerForm').reset();
-                    setTimeout(() => {
-                        window.location.href = '/';
-                    }, 2000);
+                if (response.ok) {
+                    showMessage('Inscription réussie! Redirection...', 'success');
+                    setTimeout(() => window.location.href = '/', 1500);
                 } else {
-                    showMessage('Erreur lors de l\'inscription', 'error');
+                    showMessage(result.message || "Erreur lors de l'inscription", 'error');
                 }
             } catch (error) {
                 console.error('Erreur:', error);
-                showMessage('Une erreur est survenue', 'error');
+                showMessage("Une erreur technique est survenue.", 'error');
             }
         });
 
-        function showMessage(message, type) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.textContent = message;
-            messageDiv.style.display = 'block';
-            messageDiv.style.backgroundColor = type === 'success' ? '#d4edda' : '#f8d7da';
-            messageDiv.style.color = type === 'success' ? '#155724' : '#721c24';
-            messageDiv.style.borderColor = type === 'success' ? '#c3e6cb' : '#f5c6cb';
-            messageDiv.style.border = '1px solid';
+        function showMessage(msg, type) {
+            const el = document.getElementById('message');
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.className = type; // Utiliser CSS pour le style (success/error)
+
+            // Fallback inline styles si pas de CSS
+            if (type === 'success') {
+                el.style.backgroundColor = '#d4edda';
+                el.style.color = '#155724';
+                el.style.borderColor = '#c3e6cb';
+            } else {
+                el.style.backgroundColor = '#f8d7da';
+                el.style.color = '#721c24';
+                el.style.borderColor = '#f5c6cb';
+            }
+            el.style.border = '1px solid';
         }
     </script>
 </body>
