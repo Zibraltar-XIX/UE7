@@ -1,6 +1,6 @@
 import os
 import mysql.connector
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, make_response, send_file
 from werkzeug.utils import secure_filename
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -60,17 +60,55 @@ def css_file(filename):
 def src_file(filename):
     return send_from_directory(os.path.join(SITE_DIR, 'src'), filename)
 
+@app.route('/setcookie', methods=['POST', 'GET'])
+def setcookie():
+    if request.method == 'POST':
+        email = request.form['email']
+
+        db = db_connection()
+        cursor = db.cursor(dictionary=True) #permet d'avoir les colonnes de la DB direct par leurs noms
+        cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
+        row = cursor.fetchone()
+        cursor.close()
+        db.close()
+
+        if row is None:
+            return "Utilisateur inconnu", 404
+        user_id = row['id']
+
+        resp = make_response(render_template('/profile'))
+        resp.set_cookie('UserID', str(user_id))
+        return resp
+    
+@app.route('/getcookie', methods=['GET'])
+def getcookie():
+    name = request.cookies.get('UserID')
+    return '<h1>Welcome ' + name + '</h1>'
+
 @app.route('/')
 def home():
     return render_template('home.html')
 
-@app.route('/profile')
+@app.route('/profile', methods=['POST', 'GET'])
 def profile():
     return render_template('profiles.html', data=profile_data)
 
 
-@app.route('/login')
+@app.route('/login', methods=['POST', 'GET'])
 def login():
+    email = request.form.get('email')
+    password = request.form.get('password')
+
+    db = db_connection()
+    verifmail = db.cursor(dictionary=True) 
+    verifmail.execute("SELECT id FROM Utilisateurs WHERE Email = %s AND MotDePasse = %s", (email, password))
+    row = verifmail.fetchone()
+    verifmail.close()
+    db.close()
+
+    if row is None:
+        return "Invalid email or password", 401
+
     return render_template('login.html')
 
 
