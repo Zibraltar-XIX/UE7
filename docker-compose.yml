@@ -1,17 +1,19 @@
 services:
   web-app:
-    image: alternance-tah-les-fous:latest
+    build:
+      context: .
+      dockerfile: app/Dockerfile
     restart: always
     ports:
         - "80:5000"
+    depends_on:
+      - db
 
   db:
     image: mysql:9.6
     restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_USER: alternance
-      MYSQL_PASSWORD: mdptahlesfous
+    env_file:
+      - .env
     ports:
         - "3306:3306"
     volumes:
