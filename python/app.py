@@ -46,7 +46,6 @@ profile_data = {
 
 @app.route('/uploads/<category>/<filename>')
 def uploaded_file(category, filename):
-    # Serve a file from the uploads folder
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], category, filename)
     if not os.path.exists(file_path):
         return "File not found", 404
