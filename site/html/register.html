@@ -8,7 +8,7 @@
 <body>
     <div class="container">
         <h1>Inscription</h1>
-        <form action="#" method="post">
+        <form id="registerForm">
 
             <div class="form-group user-type-group">
                 <label>Je suis :</label>
@@ -66,6 +66,8 @@
                 </div>
             </div>
 
+            <div id="message" style="display:none; margin-top:15px; padding:10px; border-radius:4px;"></div>
+
             <button type="submit">S'inscrire</button>
         </form>
     </div>
@@ -82,6 +84,65 @@
                 label.textContent = 'École';
                 input.placeholder = '';
             }
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Validation des mots de passe
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+
+            if (password !== confirmPassword) {
+                showMessage('Les mots de passe ne correspondent pas!', 'error');
+                return;
+            }
+
+            // Récupérer les données du formulaire
+            const formData = {
+                nom: document.getElementById('nom').value,
+                prenom: document.getElementById('prenom').value,
+                email: document.getElementById('email').value,
+                numero: document.getElementById('numero').value,
+                user_type: document.querySelector('input[name="user_type"]:checked').value,
+                password: password,
+                adresse: document.getElementById('ecole').value
+            };
+
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    showMessage('Inscription réussie!', 'success');
+                    document.getElementById('registerForm').reset();
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    showMessage('Erreur lors de l\'inscription', 'error');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showMessage('Une erreur est survenue', 'error');
+            }
+        });
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.style.display = 'block';
+            messageDiv.style.backgroundColor = type === 'success' ? '#d4edda' : '#f8d7da';
+            messageDiv.style.color = type === 'success' ? '#155724' : '#721c24';
+            messageDiv.style.borderColor = type === 'success' ? '#c3e6cb' : '#f5c6cb';
+            messageDiv.style.border = '1px solid';
         }
     </script>
 </body>

@@ -3,23 +3,13 @@ import mysql.connector
 from flask import Flask, render_template, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 
-# Configuration des chemins
-basedir = os.path.abspath(os.path.dirname(__file__))
-template_dir = os.path.join(basedir, '..', 'site', 'html')
-static_dir = os.path.join(basedir, '..', 'site', 'css')
-upload_base_dir = os.path.join(basedir, '..', 'site', 'uploads')
-
-# Créer le dossier de base des uploads s'il n'existe pas
-os.makedirs(upload_base_dir, exist_ok=True)
-
 app = Flask(__name__, template_folder="../site/html", static_folder='../site/css')
-app.config['UPLOAD_FOLDER'] = upload_base_dir
+app.config['UPLOAD_FOLDER'] = "../site/uploads"
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
-
 
 def db_connection():
     conn = mysql.connector.connect(
-        host="127.0.0.1",
+        host="db",
         user="alternance",
         password="mdptahlesfou",
         database="main"
@@ -50,7 +40,7 @@ def uploaded_file(category, filename):
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], category, filename)
     if not os.path.exists(file_path):
         return "File not found", 404
-    return send_file(file_path)
+    return send_file("../site/uploads/")
 
 @app.route('/')
 def home():
@@ -97,10 +87,42 @@ def register():
 
 @app.route('/register', methods=['POST'])
 def save_register():
-    data = request.get_json()
-    conn = db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("INSERT INTO user (`First-Name`, `Last-Name`, phone, email, Role, adresse, password) VALUES (%s, %s, %s, %s, %s, %s, %s)", (data.get('prenom'), data.get('nom'), data.get('numero'), data.get('email'), data.get('user_type'), data.get('adresse', ''), data.get('password')))
+    # JSON prioritaire, puis fallback formulaire classique.
+    data = request.get_json(silent=True)
+    if not data:
+        data = request.form.to_dict()
+
+    required_fields = ('prenom', 'nom', 'numero', 'email', 'user_type', 'password')
+    missing_fields = [field for field in required_fields if not data.get(field)]
+    if missing_fields:
+        return jsonify({
+            'status': 'failed',
+            'message': f"Champs manquants: {', '.join(missing_fields)}"
+        }), 400
+
+    conn = None
+    try:
+        conn = db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "INSERT INTO user (`First-Name`, `Last-Name`, phone, email, Role, adresse, password) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (
+                data.get('prenom'),
+                data.get('nom'),
+                data.get('numero'),
+                data.get('email'),
+                data.get('user_type'),
+                data.get('adresse', ''),
+                data.get('password')
+            )
+        )
+        conn.commit()
+    except mysql.connector.Error as err:
+        return jsonify({'status': 'failed', 'message': err.msg}), 500
+    finally:
+        if conn is not None and conn.is_connected():
+            conn.close()
+
     return jsonify({'status': 'success'})
 
 
