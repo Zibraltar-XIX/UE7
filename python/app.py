@@ -97,7 +97,36 @@ def profile():
     user_id = request.cookies.get('UserID')
     if not user_id:
         return redirect('/')
-    return render_template('profiles.html', data=profile_data)
+    
+    conn = db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM Utilisateurs WHERE id = %s", (user_id,))
+    row = cursor.fetchone()
+
+    if row is None:
+        return redirect('/logout')
+
+    # Remplir profile_data avec les données de la DB
+    data = {
+        'id':          row.get('id', ''),
+        'Nom':         row.get('Nom', ''),
+        'Prenom':      row.get('Prenom', ''),
+        'Email':       row.get('Email', ''),
+        'Telephone':   row.get('Telephone', ''),
+        'Adresse':     row.get('Adresse', ''),
+        'Hobbies':     row.get('Hobbies', ''),
+        'Jobs':        row.get('Jobs', ''),
+        'Skills':      row.get('Skills', ''),
+        'Description': row.get('Description', ''),
+        'linkedin':    row.get('linkedin', ''),
+        'github':      row.get('github', ''),
+        'portfolio':   row.get('portfolio', ''),
+        'PdP':         {'path': row.get('PdP', ''), 'filename': ''},
+        'CV':          {'path': row.get('CV', ''),  'filename': ''},
+        'LM':          {'path': row.get('LM', ''),  'filename': ''},
+    }
+
+    return render_template('profiles.html', data=data)
 
 
 @app.route('/login', methods=['POST', 'GET'])
