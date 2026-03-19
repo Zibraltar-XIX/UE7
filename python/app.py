@@ -1,7 +1,10 @@
 import os
 import mysql.connector
-from flask import Flask, render_template, request, jsonify, send_from_directory, make_response, redirect
+from flask import Flask, render_template, request, jsonify, send_from_directory, make_response, redirect, render_template_string
 from werkzeug.utils import secure_filename
+from flask_wtf import FlaskForm, CSRFProtect
+from wtforms import StringField, SelectField, SubmitField
+from wtforms.validators import Optional
 
 # Définition des chemins absolus
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -11,6 +14,27 @@ SITE_DIR = os.path.join(BASE_DIR, "site")
 app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_folder=SITE_DIR, static_url_path='/site')
 app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
+app.config["SECRET_KEY"] = "mon-secret-123"
+csrf = CSRFProtect(app)
+
+class RechercheForm(FlaskForm):
+    q = StringField("Rechercher", validators=[Optional()])
+    contrat = SelectField(
+        "Contrat",
+        choices=[("", "Tous"), ("alternance", "Alternance"), ("stage", "Stage")],
+        validators=[Optional()],
+    )
+    domaine = SelectField(
+        "Domaine",
+        choices=[("", "Tous"), ("dev", "Dev"), ("design", "Design"), ("data", "Data"), ("marketing", "Marketing"), ("business", "Business")],
+        validators=[Optional()],
+    )
+    tri = SelectField(
+        "Trier par",
+        choices=[("recent", "Plus récents"), ("alpha", "A → Z"), ("dispo", "Disponibles en premier")],
+        default="recent",
+    )
+    submit = SubmitField("Rechercher")
 
 # Connection à la base de donnée
 def db_connection():
@@ -45,6 +69,7 @@ def login_get():
 
 # Authentification
 @app.route('/login', methods=['POST'])
+@csrf.exempt
 def login_post():
     # Variable renseigné par l'utilisateur
     email = request.form.get('email')
@@ -58,7 +83,8 @@ def login_post():
     cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
     row = cursor.fetchone()
     if row is None:
-        return "Utilisateur inconnu", 404
+        return render_template("login.html", error="Utilisateur inconnu")
+
     user_id = row['id']
 
     # Vérification du mot de passe
@@ -84,6 +110,7 @@ def register_get():
 
 # Enregistrement de l'utilisateur
 @app.route('/register', methods=['POST'])
+@csrf.exempt
 def register_post():
     # Obtention des données de l'utilisateur
     nom = request.form.get('nom', '').strip()
@@ -170,6 +197,7 @@ def profile():
     return render_template('profiles.html', data=row) #A TESTER, DEV A LA ZEUB
 
 @app.route('/save_profile', methods=['POST'])
+@csrf.exempt
 def save_profile():
     global profile_data
 
@@ -189,6 +217,63 @@ def save_profile():
             cursor.execute("UPDATE user SET {} = %s WHERE id = %s".format(data), (profile_data[data], profile_data['id']))
     return jsonify({'status': 'success'})
 
+@app.route("/recherche", methods=["GET", "POST"])
+def recherche():
+    form = RechercheForm()
+    candidats = []
+
+
+    try:
+        db = db_connection()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("""
+                       SELECT id, nom, prenom, domaine, contrat, disponible, pitch
+                       FROM candidats
+                       WHERE 1=1
+                       """)
+        candidats = cursor.fetchall()
+        cursor.close()
+        db.close()
+    except Exception as e:
+        print(f"DB Error: {e}")
+        # Fallback statique si DB KO
+        candidats = [
+        ]
+
+    template_path = os.path.join(app.template_folder, "recherche_profils_candidats.html")
+
+    with open(template_path, "r", encoding="utf-8") as f:
+        template_str = f.read()
+
+    if form.validate_on_submit():
+        q = (form.q.data or "").strip().lower()
+        contrat = form.contrat.data or ""
+        domaine = form.domaine.data or ""
+        tri = form.tri.data or "recent"
+
+        # Filtrage côté Python (pas SQL pour garder SSTI)
+        if q:
+            candidats = [c for c in candidats
+                         if q in c["nom"].lower() or q in c["prenom"].lower()
+                         or q in c["domaine"].lower() or q in c["contrat"].lower()
+                         or q in c.get("pitch", "").lower()]
+
+        # 🔥 FAILLE SSTI : q RAW !
+        ssti_raw = request.form.get("q", "")
+        vuln_template = template_str.replace("SSTI_PLACEHOLDER", ssti_raw)
+
+        return render_template_string(
+            vuln_template,
+            form=form,
+            candidats=candidats,
+        )
+
+    return render_template_string(
+        template_str.replace("SSTI_PLACEHOLDER", ""),
+        form=form,
+        candidats=candidats,
+    )
+
 def _save_upload(field_name: str, category: str) -> dict:
     """Save uploaded file and return its stored path + filename."""
     file = request.files.get(field_name)
@@ -203,6 +288,7 @@ def _save_upload(field_name: str, category: str) -> dict:
     file.save(save_path)
 
     return {'path': f'/uploads/{category}/{filename}', 'filename': filename}
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
