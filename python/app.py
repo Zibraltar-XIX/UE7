@@ -14,8 +14,6 @@ SITE_DIR = os.path.join(BASE_DIR, "site")
 app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_folder=SITE_DIR, static_url_path='/site')
 app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
-app.config["SECRET_KEY"] = "mon-secret-123"
-csrf = CSRFProtect(app)
 
 class RechercheForm(FlaskForm):
     q = StringField("Rechercher", validators=[Optional()])
@@ -82,7 +80,7 @@ def login_post():
     cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
     row = cursor.fetchone()
     if row is None:
-        return "Utilisateur inconnu", 404
+        return render_template("login.html", error="Utilisateur inconnu")
     user_id = row['id']
 
     # Vérification du mot de passe
