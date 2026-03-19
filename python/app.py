@@ -38,7 +38,7 @@ class RechercheForm(FlaskForm):
 
 # Connection à la base de donnée
 def db_connection():
-    conn = mysql.connector.connect(host="db", user="alternance", password="mdptahlesfou", database="main")
+    conn = mysql.connector.connect(host="db", user="user", password="mdp", database="main")
     return conn
 
 
@@ -122,7 +122,7 @@ def profile():
     return render_template('profiles.html', data=data)
 
 # Authentification
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET','POST'])
 @csrf.exempt
 def login_post():
     # Variable renseigné par l'utilisateur
@@ -208,47 +208,21 @@ def register_post():
     resp.set_cookie('UserID', str(user_id))
     return resp
 
-# Profil de l'utilisateur
-@app.route('/profile', methods=['GET'])
-def profile():
-    try:
-        # Récupération de l'ID dans le cookie
-        id = request.cookies.get('UserID')
-    except:
-        redirect('/')
+def _save_upload(field_name: str, category: str) -> dict:
+    """Save uploaded file and return its stored path + filename."""
+    file = request.files.get(field_name)
+    if not file or not file.filename:
+        return {'path': '', 'filename': ''}
 
-    # Connection à la DB
-    conn = db_connection()
-    cursor = conn.cursor()
+    category_dir = os.path.join(app.config['UPLOAD_FOLDER'], category)
+    os.makedirs(category_dir, exist_ok=True)
 
-    # Recherche de l'utilisateur
-    cursor.execute("SELECT * FROM Utilisateurs WHERE id = %s", (id,))
-    row = cursor.fetchone()
+    filename = secure_filename(file.filename)
+    save_path = os.path.join(category_dir, filename)
+    file.save(save_path)
 
-    profile_data = {
-        'id': '',
-        'lastname': '',
-        'firstname': '',
-        'email': '',
-        'phone': '',
-        'address': '',
-        'hobbies': '',
-        'job': '',
-        'skills': '',
-        'description': '',
-        'linkedin': '',
-        'github': '',
-        'portfolio': '',
-        'profile_pic': {'path': '', 'filename': ''},  # Chemin et nom du fichier
-        'cv': {'path': '', 'filename': ''},
-        'lettre': {'path': '', 'filename': ''}
-    }
+    return {'path': f'/uploads/{category}/{filename}', 'filename': filename}
 
-    # Fermeture de la connexion avec la DB
-    cursor.close()
-    conn.close()
-
-    return render_template('profiles.html', data=row) #A TESTER, DEV A LA ZEUB
 
 @app.route('/save_profile', methods=['POST'])
 @csrf.exempt
