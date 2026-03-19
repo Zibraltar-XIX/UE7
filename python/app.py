@@ -14,6 +14,8 @@ SITE_DIR = os.path.join(BASE_DIR, "site")
 app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_folder=SITE_DIR, static_url_path='/site')
 app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
+app.config["SECRET_KEY"] = "mon-secret-123"
+csrf = CSRFProtect(app)
 
 class RechercheForm(FlaskForm):
     q = StringField("Rechercher", validators=[Optional()])
@@ -67,6 +69,7 @@ def login_get():
 
 # Authentification
 @app.route('/login', methods=['POST'])
+@csrf.exempt
 def login_post():
     # Variable renseigné par l'utilisateur
     email = request.form.get('email')
@@ -81,6 +84,7 @@ def login_post():
     row = cursor.fetchone()
     if row is None:
         return render_template("login.html", error="Utilisateur inconnu")
+
     user_id = row['id']
 
     # Vérification du mot de passe
@@ -106,6 +110,7 @@ def register_get():
 
 # Enregistrement de l'utilisateur
 @app.route('/register', methods=['POST'])
+@csrf.exempt
 def register_post():
     # Obtention des données de l'utilisateur
     nom = request.form.get('nom', '').strip()
@@ -192,6 +197,7 @@ def profile():
     return render_template('profiles.html', data=row) #A TESTER, DEV A LA ZEUB
 
 @app.route('/save_profile', methods=['POST'])
+@csrf.exempt
 def save_profile():
     global profile_data
 
