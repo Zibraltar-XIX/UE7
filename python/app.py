@@ -1,6 +1,6 @@
-import os
-import mysql.connector
-from flask import Flask, render_template, request, jsonify, send_from_directory, make_response, redirect, render_template_string
+# Importation des librairies
+import os, mysql.connector
+from flask import Flask, render_template, request, send_from_directory, make_response, redirect, render_template_string
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, SelectField, SubmitField
@@ -13,7 +13,7 @@ SITE_DIR = os.path.join(BASE_DIR, "site")
 # Configuration de Flask
 app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_folder=SITE_DIR, static_url_path='/site')
 app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
+app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024  # 64MB max
 app.config["SECRET_KEY"] = "mon-secret-123"
 csrf = CSRFProtect(app)
 
@@ -58,9 +58,12 @@ def src_file(filename):
     return send_from_directory(os.path.join(SITE_DIR, 'src'), filename)
 
 # Racine du site
-@app.route('/', methods=['GET'])
+@app.route('/', methods=['GET', 'POST'])
 def home():
-    return render_template('home.html')
+    if request.method == 'GET':
+        return render_template('home.html')
+    elif request.method == 'POST':
+        return "<h1>Perdu ?</h1>"
 
 # Formulaire de login
 @app.route('/login', methods=['GET'])
@@ -68,91 +71,97 @@ def login_get():
     return render_template('login.html')
 
 # Authentification
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 @csrf.exempt
-def login_post():
-    # Variable renseigné par l'utilisateur
-    email = request.form.get('email')
-    password = request.form.get('password')
+def login():
+    # GET
+    if request.method == 'GET':
+        return render_template('login.html')
 
-    # Connection à la DB
-    db = db_connection()
-    cursor = db.cursor(dictionary=True)
+    # POST
+    else:
+        # Variable renseigné par l'utilisateur
+        email = request.form.get('email')
+        password = request.form.get('password')
 
-    # Recherche de l'utilisateur
-    cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
-    row = cursor.fetchone()
-    if row is None:
-        return render_template("login.html", error="Utilisateur inconnu")
+        # Connection à la DB
+        db = db_connection()
+        cursor = db.cursor(dictionary=True)
 
-    user_id = row['id']
+        # Recherche de l'utilisateur
+        cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
+        row = cursor.fetchone()
+        if row is None:
+            return render_template("login.html", error="Utilisateur inconnu")
+        user_id = row['id']
 
-    # Vérification du mot de passe
-    cursor.execute("SELECT MotDePasse FROM Utilisateurs WHERE Email = %s", (email,))
-    row = cursor.fetchone()
-    MotDePass = row['MotDePasse']
-    if str(password) != str(MotDePass):
-        return render_template("login.html", error="Le mot de passe est différent de " + MotDePass)
+        # Vérification du mot de passe
+        cursor.execute("SELECT MotDePasse FROM Utilisateurs WHERE Email = %s", (email,))
+        row = cursor.fetchone()
+        MotDePass = row['MotDePasse']
+        if str(password) != str(MotDePass):
+            return render_template("login.html", error="Le mot de passe est différent de " + MotDePass)
 
-    # Fermeture de la connexion avec la DB
-    cursor.close()
-    db.close()
+        # Fermeture de la connexion avec la DB
+        cursor.close()
+        db.close()
 
-    # Redirection vers le profil avec le cookie
-    resp = make_response(redirect('/profile'))
-    resp.set_cookie('UserID', str(user_id))
-    return resp
-
-# Formulaire d'enregistrement
-@app.route('/register', methods=['GET'])
-def register_get():
-    return render_template('register.html')
+        # Redirection vers le profil avec le cookie
+        resp = make_response(redirect('/profile'))
+        resp.set_cookie('UserID', str(user_id))
+        return resp
 
 # Enregistrement de l'utilisateur
-@app.route('/register', methods=['POST'])
+@app.route('/register', methods=['GET', 'POST'])
 @csrf.exempt
-def register_post():
-    # Obtention des données de l'utilisateur
-    nom = request.form.get('nom', '').strip()
-    prenom = request.form.get('prenom', '').strip()
-    numero = request.form.get('numero', '').strip()
-    email = request.form.get('email', '').strip()
-    user_type = request.form.get('user_type', '').strip()
-    password = request.form.get('password', '')
-    confirm = request.form.get('confirm_password', '')
-    adresse = request.form.get('ecole', '').strip()  # mapping ecole -> adresse (comme tu voulais)
+def register():
+    # GET
+    if request.method == 'GET':
+        return render_template('register.html')
 
-    # Vérification de la confirmation du MdP
-    if password != confirm:
-        return render_template("register.html", error="Les mots de passe ne correspondent pas."), 400
+    # POST
+    else:
+        # Obtention des données de l'utilisateur
+        nom = request.form.get('nom', '').strip()
+        prenom = request.form.get('prenom', '').strip()
+        numero = request.form.get('numero', '').strip()
+        email = request.form.get('email', '').strip()
+        user_type = request.form.get('user_type', '').strip()
+        password = request.form.get('password', '')
+        confirm = request.form.get('confirm_password', '')
+        adresse = request.form.get('ecole', '').strip()
 
-    try:
-        # Connexion à la DB
-        conn = db_connection()
-        cursor = conn.cursor(dictionary=True)
+        # Vérification de la confirmation du MdP
+        if password != confirm:
+            return render_template("register.html", error="Les mots de passe ne correspondent pas."), 400
 
-        # Vérification que l'utilisateur n'existe pas déjà
-        cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
-        if cursor.fetchone() is not None:
-            return render_template("register.html", error="Utilisateur déjà enregistré"), 409
+        try:
+            # Connexion à la DB
+            conn = db_connection()
+            cursor = conn.cursor(dictionary=True)
 
-        # Création de l'utilisateur
-        cursor.execute(
-            "INSERT INTO Utilisateurs (`Prenom`, `Nom`, Telephone, Email, Role, Adresse, MotDePasse) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s)",
-            (prenom, nom, numero, email, user_type, adresse, password)
-        )
-        conn.commit()
-        user_id = cursor.lastrowid
-        cursor.close()
-        conn.close()
+            # Vérification que l'utilisateur n'existe pas déjà
+            cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
+            if cursor.fetchone() is not None:
+                return render_template("register.html", error="Utilisateur déjà enregistré"), 409
 
-    except mysql.connector.Error as err:
-        return render_template("register.html", error=f"Erreur DB : {err}"), 500
+            # Création de l'utilisateur
+            cursor.execute(
+                "INSERT INTO Utilisateurs (`Prenom`, `Nom`, Telephone, Email, Role, Adresse, MotDePasse) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (prenom, nom, numero, email, user_type, adresse, password)
+            )
+            conn.commit()
+            user_id = cursor.lastrowid
+            cursor.close()
+            conn.close()
 
-    resp = make_response(redirect('/profile'))
-    resp.set_cookie('UserID', str(user_id))
-    return resp
+        except mysql.connector.Error as err:
+            return render_template("register.html", error=f"Erreur DB : {err}"), 500
+
+        resp = make_response(redirect('/profile'))
+        resp.set_cookie('UserID', str(user_id))
+        return resp
 
 @app.route('/profile', methods=['GET', 'POST'])
 @csrf.exempt
@@ -183,7 +192,7 @@ def profile():
 
         return render_template('profiles.html', data=row)
 
-    elif request.method == 'POST':
+    else:
         return render_template("profiles.html", data={'profile_pic': {'path': ''}})
 
 @app.route("/recherche", methods=["GET", "POST"])
@@ -243,25 +252,17 @@ def recherche():
         candidats=candidats,
     )
 
+# Page de troll
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
     return redirect("https://www.rickroll.it/")
 
-def _save_upload(field_name: str, category: str) -> dict:
-    """Save uploaded file and return its stored path + filename."""
-    file = request.files.get(field_name)
-    if not file or not file.filename:
-        return {'path': '', 'filename': ''}
-
-    category_dir = os.path.join(app.config['UPLOAD_FOLDER'], category)
-    os.makedirs(category_dir, exist_ok=True)
-
-    filename = secure_filename(file.filename)
-    save_path = os.path.join(category_dir, filename)
-    file.save(save_path)
-
-    return {'path': f'/uploads/{category}/{filename}', 'filename': filename}
+# Page troll 2
+@app.route("/config", methods=["GET", "POST"])
+def config():
+    return redirect("https://realfreemoney.neocities.org/")
 
 
+# Lancer Flask
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
