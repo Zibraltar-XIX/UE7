@@ -154,68 +154,37 @@ def register_post():
     resp.set_cookie('UserID', str(user_id))
     return resp
 
-# Profil de l'utilisateur
-@app.route('/profile', methods=['GET'])
-def profile():
-    try:
-        # Récupération de l'ID dans le cookie
-        id = request.cookies.get('UserID')
-    except:
-        redirect('/')
-
-    # Connection à la DB
-    conn = db_connection()
-    cursor = conn.cursor()
-
-    # Recherche de l'utilisateur
-    cursor.execute("SELECT * FROM Utilisateurs WHERE id = %s", (id,))
-    row = cursor.fetchone()
-
-    profile_data = {
-        'id': '',
-        'lastname': '',
-        'firstname': '',
-        'email': '',
-        'phone': '',
-        'address': '',
-        'hobbies': '',
-        'job': '',
-        'skills': '',
-        'description': '',
-        'linkedin': '',
-        'github': '',
-        'portfolio': '',
-        'profile_pic': {'path': '', 'filename': ''},  # Chemin et nom du fichier
-        'cv': {'path': '', 'filename': ''},
-        'lettre': {'path': '', 'filename': ''}
-    }
-
-    # Fermeture de la connexion avec la DB
-    cursor.close()
-    conn.close()
-
-    return render_template('profiles.html', data=row) #A TESTER, DEV A LA ZEUB
-
-@app.route('/save_profile', methods=['POST'])
+@app.route('/profile', methods=['GET', 'POST'])
 @csrf.exempt
-def save_profile():
-    global profile_data
+def profile():
+    # GET
+    if request.method == 'GET':
+        user_id = request.cookies.get('UserID')
+        if not user_id:
+            return redirect('/login')
 
-    # Champs texte
-    for key in ('id', 'lastname', 'firstname', 'email', 'phone', 'address', 'hobbies', 'job', 'skills', 'description', 'linkedin', 'github', 'portfolio'):
-        profile_data[key] = request.form.get(key, '')
+        conn = db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM Utilisateurs WHERE id = %s", (user_id,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
 
-    # Fichiers
-    profile_data['profile_pic'] = _save_upload('profile_pic', 'profile_pics')
-    profile_data['cv'] = _save_upload('cv', 'cv')
-    profile_data['lettre'] = _save_upload('lettre', 'lettres')
-    print("Profile data updated:", profile_data)  # Debug log
-    conn = db_connection()
-    cursor = conn.cursor(dictionary=True)
-    for data in profile_data:
-        if profile_data[data] != "" and data != "id":
-            cursor.execute("UPDATE user SET {} = %s WHERE id = %s".format(data), (profile_data[data], profile_data['id']))
-    return jsonify({'status': 'success'})
+        if row is None:
+            resp = make_response(redirect('/login'))
+            resp.delete_cookie('UserID')
+            return redirect('/login')
+
+        for file_field in ['profile_pic', 'cv', 'lettre']:
+            if file_field not in row or not row[file_field]:
+                row[file_field] = {'path': ''}
+            elif isinstance(row[file_field], str):
+                row[file_field] = {'path': row[file_field]}
+
+        return render_template('profiles.html', data=row)
+
+    elif request.method == 'POST':
+        return render_template("profiles.html", data={'profile_pic': {'path': ''}})
 
 @app.route("/recherche", methods=["GET", "POST"])
 def recherche():
@@ -273,6 +242,10 @@ def recherche():
         form=form,
         candidats=candidats,
     )
+
+@app.route("/admin", methods=["GET", "POST"])
+def admin():
+    return redirect("https://www.rickroll.it/")
 
 def _save_upload(field_name: str, category: str) -> dict:
     """Save uploaded file and return its stored path + filename."""
