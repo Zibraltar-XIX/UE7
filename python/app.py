@@ -64,12 +64,9 @@ def login_post():
     # Vérification du mot de passe
     cursor.execute("SELECT MotDePasse FROM Utilisateurs WHERE Email = %s", (email,))
     row = cursor.fetchone()
-    print("row" + str(row), flush=True)
     MotDePass = row['MotDePasse']
-    print(MotDePass, flush=True)
-    print(password, flush=True)
     if str(password) != str(MotDePass):
-        return "Le mot de passe est différent de " + MotDePass, 403
+        return render_template("login.html", error="Le mot de passe est différent de " + MotDePass)
 
     # Fermeture de la connexion avec la DB
     cursor.close()
@@ -88,47 +85,44 @@ def register_get():
 # Enregistrement de l'utilisateur
 @app.route('/register', methods=['POST'])
 def register_post():
-    # Variable renseigné par l'utilisateur
-    data = request.get_json()
+    # Obtention des données de l'utilisateur
+    nom = request.form.get('nom', '').strip()
+    prenom = request.form.get('prenom', '').strip()
+    numero = request.form.get('numero', '').strip()
+    email = request.form.get('email', '').strip()
+    user_type = request.form.get('user_type', '').strip()
+    password = request.form.get('password', '')
+    confirm = request.form.get('confirm_password', '')
+    adresse = request.form.get('ecole', '').strip()  # mapping ecole -> adresse (comme tu voulais)
+
+    # Vérification de la confirmation du MdP
+    if password != confirm:
+        return render_template("register.html", error="Les mots de passe ne correspondent pas."), 400
 
     try:
-        # Connection à la DB
+        # Connexion à la DB
         conn = db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Recherche de l'utilisateur
-        cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (data['email'],))
-        row = cursor.fetchone()
-        if row is not None:
-            return jsonify({'status': 'Utilisateur déjà enregistré'}), 403
+        # Vérification que l'utilisateur n'existe pas déjà
+        cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
+        if cursor.fetchone() is not None:
+            return render_template("register.html", error="Utilisateur déjà enregistré"), 409
 
         # Création de l'utilisateur
-        cursor.execute("INSERT INTO Utilisateurs (`Prenom`, `Nom`, Telephone, Email, Role, Adresse, MotDePasse) VALUES (%s, %s, %s, %s, %s, %s, %s)",(
-                data['prenom'],
-                data['nom'],
-                data['numero'],
-                data['email'],
-                data['user_type'],
-                data.get('adresse', ''),
-                data['password']
-            )
+        cursor.execute(
+            "INSERT INTO Utilisateurs (`Prenom`, `Nom`, Telephone, Email, Role, Adresse, MotDePasse) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (prenom, nom, numero, email, user_type, adresse, password)
         )
         conn.commit()
-
-        # Obtention de l'id du nouvel utilisateur
-        cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (data['email'],))
-        row = cursor.fetchone()
-        user_id = str(row['id'])
-
-        # Fermeture de la connexion avec la DB
+        user_id = cursor.lastrowid
         cursor.close()
         conn.close()
 
     except mysql.connector.Error as err:
-        print("Print :\n" + str(err), flush=True)
-        return jsonify({'status': 'failed', 'message': str(err)}), 500
+        return render_template("register.html", error=f"Erreur DB : {err}"), 500
 
-    # Redirection vers le profil avec le cookie
     resp = make_response(redirect('/profile'))
     resp.set_cookie('UserID', str(user_id))
     return resp
