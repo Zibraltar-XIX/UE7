@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS `Utilisateurs` (
   `Github` varchar(20) DEFAULT NULL,
   `Portfolio` varchar(20) DEFAULT NULL,
   `Loisirs` text,
-  `Compétences` text,
+  `Competences` text,
   `Emplois` text,
   `Description` text,
   `CV` blob,
