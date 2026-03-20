@@ -1,7 +1,6 @@
 # Importation des librairies
 import os, mysql.connector
 from flask import Flask, render_template, request, send_from_directory, make_response, redirect, render_template_string
-from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, SelectField, SubmitField
 from wtforms.validators import Optional
