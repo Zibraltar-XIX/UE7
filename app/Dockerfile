@@ -7,6 +7,7 @@ WORKDIR /app
 # Copier les fichiers de l'app dans le conteneur
 COPY ./site ./site
 COPY ./python ./python
+COPY .env ./.env
 
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -r ./python/requirements.txt

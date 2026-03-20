@@ -6,6 +6,8 @@ services:
         - "80:5000"
     depends_on:
       - db
+    cap_drop:
+      - ALL
 
   db:
     image: mysql:9.6
@@ -14,6 +16,10 @@ services:
       - .env
     ports:
         - "3306:3306"
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_NICE
     volumes:
       - ./mysql_data:/var/lib/mysql
       - ./init:/docker-entrypoint-initdb.d

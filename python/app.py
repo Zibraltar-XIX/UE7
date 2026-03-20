@@ -1,9 +1,13 @@
 # Importation des librairies
 import os, mysql.connector
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, send_from_directory, make_response, redirect, render_template_string
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, SelectField, SubmitField
 from wtforms.validators import Optional
+
+# Charger les variables du .env
+load_dotenv("../.env")
 
 # Définition des chemins absolus
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -13,7 +17,7 @@ SITE_DIR = os.path.join(BASE_DIR, "site")
 app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_folder=SITE_DIR, static_url_path='/site')
 app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024  # 64MB max
-app.config["SECRET_KEY"] = "mon-secret-123"
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 csrf = CSRFProtect(app)
 
 class RechercheForm(FlaskForm):
@@ -37,7 +41,7 @@ class RechercheForm(FlaskForm):
 
 # Connection à la base de donnée
 def db_connection():
-    conn = mysql.connector.connect(host="db", user="alternance", password="mdptahlesfou", database="main")
+    conn = mysql.connector.connect(host="db", user=os.getenv("MYSQL_USER"), password=os.getenv("MYSQL_PASSWORD"), database=os.getenv("MYSQL_DATABASE"))
     return conn
 
 # Permettre de pouvoir récupérer des fichiers dans /uploads
@@ -64,12 +68,7 @@ def home():
     elif request.method == 'POST':
         return "<h1>Perdu ?</h1>"
 
-# Formulaire de login
-@app.route('/login', methods=['GET'])
-def login_get():
-    return render_template('login.html')
-
-# Authentification
+# Page d'authentification
 @app.route('/login', methods=['GET', 'POST'])
 @csrf.exempt
 def login():
@@ -203,11 +202,7 @@ def recherche():
     try:
         db = db_connection()
         cursor = db.cursor(dictionary=True)
-        cursor.execute("""
-                       SELECT id, nom, prenom, domaine, contrat, disponible, pitch
-                       FROM candidats
-                       WHERE 1=1
-                       """)
+        cursor.execute("""SELECT id, nom, prenom, domaine, contrat, disponible, pitch FROM candidats WHERE 1=1""")
         candidats = cursor.fetchall()
         cursor.close()
         db.close()
