@@ -2,146 +2,122 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Registration</title>
+    <title>Inscription</title>
+    <!-- On garde les liens CSS originaux qui marchent pour le visuel -->
     <link rel="stylesheet" href="../css/register.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="icon" href="../src/logo tah les fous.png">
 </head>
 <body>
-    <div class="container">
+<div class="box_inscription">
+    <div class="register_illustration">
+        <img src="../src/register-illustration.png"
+             alt="register_illustration">
+    </div>
+    <div class="section_input">
         <h1>Inscription</h1>
-        <form id="registerForm">
 
-            <div class="form-group user-type-group">
+        <!-- Changement ici : suppression de l'event JS, on passe en POST standard vers /register -->
+        <form id="formulaire_inscription" action="/register" method="post">
+
+            <div class="selection_formualire">
                 <label>Je suis :</label>
-                <div class="radio-options">
+                <div class="selection_input">
                     <label>
-                        <input type="radio" name="user_type" value="student" checked onclick="toggleField('student')"> Étudiant
+                        <input type="radio" name="user_type"
+                               value="student"
+                               checked onclick="toggleField('student')">
+                        Étudiant
                     </label>
                     <label>
-                        <input type="radio" name="user_type" value="company" onclick="toggleField('company')"> Entreprise
+                        <input type="radio" name="user_type"
+                               value="company"
+                               onclick="toggleField('company')"> Entreprise
                     </label>
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
+            <div class="selection_input">
+                <div class="input_group">
                     <label for="nom">Nom</label>
                     <input type="text" id="nom" name="nom" required>
                 </div>
-                <div class="form-group">
+                <div class="input_group">
                     <label for="prenom">Prénom</label>
-                    <input type="text" id="prenom" name="prenom" required>
+                    <input type="text" class="input" name="prenom" required>
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
+            <div class="selection_input">
+                <div class="input_group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
+                    <input type="email" class="input" name="email" required>
                 </div>
-                <div class="form-group">
+                <div class="input_group">
                     <label for="numero">Numéro de téléphone</label>
-                    <input type="tel" id="numero" name="numero" required>
+                    <input type="tel" class="input" id="numero" name="numero" required>
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
+            <div class="selection_input">
+                <div class="input_group">
                     <label for="dob">Date de naissance</label>
-                    <input type="date" id="dob" name="dob" required>
+                    <input type="date" class="input" id="dob" name="dob" required>
                 </div>
-                <div class="form-group">
+                <div class="input_group">
                     <label for="ecole" id="label_ecole">École</label>
-                    <input type="text" id="ecole" name="ecole">
+                    <input type="text" class="input" id="ecole" name="ecole">
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
+            <div class="selection_input">
+                <div class="input_group">
                     <label for="password">Mot de passe</label>
-                    <input type="password" id="password" name="password" required>
+                    <input type="password" class="input" id="password" name="password" required>
                 </div>
-                <div class="form-group">
-                    <label for="confirm_password">Confirmer le mot de passe</label>
-                    <input type="password" id="confirm_password" name="confirm_password" required>
+                <div class="input_group">
+                    <label for="confirm_password">Confirmer mot de passe</label>
+                    <input type="password" class="input" name="confirm_password" required>
                 </div>
             </div>
 
-            <div id="message" style="display:none; margin-top:15px; padding:10px; border-radius:4px;"></div>
+            <!-- Ce div ne sert plus à rien techniquement mais je le laisse pour ne pas casser le CSS au cas où -->
+            <div id="message" style="display:none; margin-top:15px;"></div>
 
             <button type="submit">S'inscrire</button>
         </form>
     </div>
+</div>
 
-    <script>
-        function toggleField(type) {
-            const label = document.getElementById('label_ecole');
-            const input = document.getElementById('ecole');
-            if (type === 'company') {
-                label.textContent = "Nom de l'entreprise";
-                input.placeholder = 'Ex: Ma Société SAS';
-            } else {
-                label.textContent = 'École';
-                input.placeholder = '';
-            }
+<div class="background">
+    <span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span>
+</div>
+
+<!-- Logique Backend : Affichage de l'erreur via Jinja/Alert (comme login) -->
+{% if error %}
+<script>
+    alert({{ error|tojson }});
+</script>
+{% endif %}
+
+<script>
+    // On garde juste cette fonction utile pour le visuel du formulaire
+    function toggleField(type) {
+        const label = document.getElementById('label_ecole');
+        const input = document.getElementById('ecole');
+        if (type === 'company') {
+            label.textContent = "Nom de l'entreprise";
+            input.placeholder = 'Ex: Ma Société SAS';
+        } else {
+            label.textContent = 'École';
+            input.placeholder = '';
         }
-
-        document.getElementById('registerForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const messageDiv = document.getElementById('message');
-            messageDiv.style.display = 'none';
-
-            const formData = new FormData(this);
-            const password = formData.get('password');
-
-            if (password !== formData.get('confirm_password')) {
-                showMessage('Les mots de passe ne correspondent pas!', 'error');
-                return;
-            }
-
-            const data = Object.fromEntries(formData.entries());
-            data.adresse = data.ecole; // Mapping spécifique demandé par le backend (adresse -> ecole)
-            delete data.confirm_password;
-            delete data.ecole;
-
-            try {
-                const response = await fetch('/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    showMessage('Inscription réussie! Redirection...', 'success');
-                    setTimeout(() => window.location.href = '/', 1500);
-                } else {
-                    showMessage(result.message || "Erreur lors de l'inscription", 'error');
-                }
-            } catch (error) {
-                console.error('Erreur:', error);
-                showMessage("Une erreur technique est survenue.", 'error');
-            }
-        });
-
-        function showMessage(msg, type) {
-            const el = document.getElementById('message');
-            el.textContent = msg;
-            el.style.display = 'block';
-            el.className = type; // Utiliser CSS pour le style (success/error)
-
-            // Fallback inline styles si pas de CSS
-            if (type === 'success') {
-                el.style.backgroundColor = '#d4edda';
-                el.style.color = '#155724';
-                el.style.borderColor = '#c3e6cb';
-            } else {
-                el.style.backgroundColor = '#f8d7da';
-                el.style.color = '#721c24';
-                el.style.borderColor = '#f5c6cb';
-            }
-            el.style.border = '1px solid';
-        }
-    </script>
+    }
+</script>
 </body>
 </html>

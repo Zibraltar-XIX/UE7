@@ -1,20 +1,20 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET time_zone = "+00:00";
+SET time_zone = "+01:00";
 
 CREATE DATABASE IF NOT EXISTS main;
 USE main;
 
 CREATE TABLE IF NOT EXISTS `Annonce` (
 `id` int(11) NOT NULL,
-  `id_user` int(11) DEFAULT NULL,
+  `id_Utilisateur` int(11) DEFAULT NULL,
   `Description` text,
   `Titre` tinytext,
   `Contrat` enum('Alternance','Stage') DEFAULT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;
 
 
 CREATE TABLE IF NOT EXISTS `Utilisateurs` (
-`id` smallint(6) NOT NULL,
+`id` int(11) NOT NULL,
   `Prenom` tinytext,
   `Nom` tinytext,
   `Telephone` varchar(20) DEFAULT NULL,
@@ -23,14 +23,17 @@ CREATE TABLE IF NOT EXISTS `Utilisateurs` (
   `MotDePasse` varchar(255) DEFAULT NULL,
   `Adresse` text,
   `Web` text,
-  `Hobbies` text,
-  `Skills` text,
-  `Jobs` text,
+  `Linkedin` varchar(20) DEFAULT NULL,
+  `Github` varchar(20) DEFAULT NULL,
+  `Portfolio` varchar(20) DEFAULT NULL,
+  `Loisirs` text,
+  `Compétences` text,
+  `Emplois` text,
   `Description` text,
   `CV` blob,
   `PdP` blob,
   `LM` text
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;
 
 ALTER TABLE `Annonce`
  ADD PRIMARY KEY (`id`);
