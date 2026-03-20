@@ -1,156 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile Page</title>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Profile Page</title>
 
-    <!-- Custom Css -->
-    <link rel="stylesheet" href="../css/profiles.css">
+        <!-- Custom Css -->
+        <link rel="stylesheet" href="../css/profiles.css">
+        <link rel="stylesheet" href="../css/main.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+            rel="stylesheet">
+    </head>
+    <body>
+        <div class="main">
+            <div class="navbar">
+                <ul>
+                    <li><a href="/">< Accueil</a></li>
+                </ul>
+                <p>PROFIL</p> 
+                <ul>
+                    <li><a href="/profil">Déconnexion</a></li>
+                </ul>
+            </div>
 
-    <!-- FontAwesome 5 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
-</head>
-<body>
-    <!-- Navbar top -->
-    <div class="navbar-top">
-        <div class="title">
-            <h1>Profile</h1>
+            <div class="profil">
+                <div class="box_profil">
+                    <!-- Image de profil cliquable pour uploader une nouvelle -->
+                    <img src="{{ data.PdP.path or '' }}" alt width="100"
+                        height="100" onclick="uploadProfilePic()">
+                    <!-- Input caché pour sélectionner le fichier image -->
+                    <input type="file" id="profile-pic-input"
+                        style="display: none;"
+                        accept="image/*" onchange="changeProfilePic(this)">
+
+                    <div class="name">
+                    </div>
+                    <div class="job">
+                    </div>
+                </div>
+            </div>
+
+            <div class="box_milieu_principale">
+                <div class="box_milieu">
+                    <div class="box_identite_description">
+                        <div class="box_identite">
+                            <h2>IDENTITE</h2>
+                            <div class="section_identite">
+                                <i class="fa fa-pen fa-xs edit"
+                                    onclick="toggleEdit()"></i>
+                                <div class="row">
+                                    <span>Last Name :</span>
+                                    <input type="text" placeholder="Votre...">
+                                </div>
+                                <div class="row">
+                                    <span>First Name :</span>
+                                    <input type="text" placeholder="Votre...">
+                                </div>
+                                <div class="row">
+                                    <span>Email :</span>
+                                    <input type="text" placeholder="Votre...">
+                                </div>
+                                <div class="row">
+                                    <span>Phone :</span>
+                                    <input type="text" placeholder="Votre...">
+                                </div>
+                                <div class="row">
+                                    <span>Address :</span>
+                                    <input type="text" placeholder="Votre adresse...">
+                                </div>
+                                <div class="row">
+                                    <span>Hobbies :</span>
+                                    <input type="text" placeholder="Vos loisirs">
+                                </div>
+                                <div class="row">
+                                    <span>Job recherché :</span>
+                                    <input type="text" placeholder="Votre...">
+                                </div>
+                                <div class="row">
+                                    <span>Skills :</span>
+                                    <input type="text" placeholder="Votre...">
+                                </div>
+                                <h2>DESCRIPTION</h2>
+                                <div class="description_modif">
+                                <i class="fa fa-pen fa-xs edit"
+                                    onclick="toggleEditDesc(this)"></i>
+                                <input type="text" placeholder="Votre description" maxlength="100" size="60">
+                            </div>
+                            </div>
+                        </div>
+                    
+                    <div class="box_reseaux_documents">
+                        <div class="section_reseaux">
+                            <h2>RESAUX ET SITES</h2>
+                            <div class="reseaux_modif">
+                                <i class="fa fa-pen fa-xs edit"
+                                    onclick="toggleEdit(this)"></i>
+                                <div class="row">
+                                    <span>Linkdin :</span>
+                                    <span>="Linkedin">{{ data.linkedin }}</span>
+                                </div>
+                                <div class="row">
+                                    <span>Github :</span>
+                                    <span>="Github">{{ data.github }}</span>
+                                </div>
+                                <div class="row">
+                                    <span>Portfolio :</span>
+                                    ="Portfolio">{{ data.portfolio }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section_documents">
+                            <h2>DOCUMENTS</h2>
+                            <div class="documents_modif">
+                                <div class="row">
+                                    <span>CV :</span>
+                                    <div class="file-input">
+                                        <input type="file" id="cv">
+                                        <button onclick="viewFile('cv')">View</button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <span>Lettre de motivation :</span>
+                                    <div class="file-input">
+                                        <input type="file" id="lettre">
+                                        <button
+                                            onclick="viewFile('lettre')">View</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="saveProfile()">Save Profile</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Navbar -->
-        <ul>
-            <li>
-                <a href="/">
-                    <i class="fa fa-home fa-2x"></i>
-                </a>
-            </li>
-            <li>
-                <a href="#" onclick="signOut()">
-                    <i class="fa fa-sign-out-alt fa-2x"></i>
-                </a>
-            </li>
-        </ul>
+        <div class="background">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
         <!-- End -->
-    </div>
-    <!-- End -->
-
-    <div class="sidenav">
-        <div class="profile">
-            <!-- Image de profil cliquable pour uploader une nouvelle -->
-            <img src="{{ data.PdP.path or '' }}" alt="" width="100" height="100" onclick="uploadProfilePic()">
-            <!-- Input caché pour sélectionner le fichier image -->
-            <input type="file" id="profile-pic-input" style="display: none;" accept="image/*" onchange="changeProfilePic(this)">
-
-            <div class="name">
-            </div>
-            <div class="job">
-            </div>
-        </div>
-
-        <div class="sidenav-url">
-            <div class="url">
-                <a href="#profile" class="active">Profile</a>
-                <hr align="center">
-            </div>
-        </div>
-    </div>
-    <!-- End -->
-
-    <!-- Main -->
-    <div class="main">
-        <h2>IDENTITY</h2>
-        <div class="card">
-            <div class="card-body">
-                <!-- Icône d'édition pour rendre les champs modifiables -->
-                <i class="fa fa-pen fa-xs edit" onclick="toggleEdit(this)"></i>
-                <div class="row">
-                    <span>Last Name :</span>
-                    <span id="Nom">{{ data.Nom }}</span>
-                </div>
-                <div class="row">
-                    <span>First Name :</span>
-                    <span id="Prenom">{{ data.Prenom }}</span>
-                </div>
-                <div class="row">
-                    <span>Email :</span>
-                    <span id="Email">{{ data.Email }}</span>
-                </div>
-                <div class="row">
-                    <span>Phone :</span>
-                    <span id="Telephone">{{ data.Telephone }}</span>
-                </div>
-                <div class="row">
-                    <span>Address :</span>
-                    <span id="Adresse">{{ data.Adresse }}</span>
-                </div>
-                <div class="row">
-                    <span>Hobbies :</span>
-                    <span id="Hobbies">{{ data.Hobbies }}</span>
-                </div>
-                <div class="row">
-                    <span>Job recherché :</span>
-                    <span id="Jobs">{{ data.Job }}</span>
-                </div>
-                <div class="row">
-                    <span>Skills :</span>
-                    <span id="Skills">{{ data.Skills }}</span>
-                </div>
-            </div>
-        </div>
-
-        <h2>DESCRIPTION</h2>
-        <div class="card">
-            <div class="card-body">
-                <!-- Icône d'édition pour la description -->
-                <i class="fa fa-pen fa-xs edit" onclick="toggleEditDesc(this)"></i>
-                <p id="Description">{{ data.Description }}</p>
-            </div>
-        </div>
-
-        <h2>WEBSITES</h2>
-        <div class="card">
-            <div class="card-body">
-                <!-- Icône d'édition pour les liens -->
-                <i class="fa fa-pen fa-xs edit" onclick="toggleEdit(this)"></i>
-                <div class="row">
-                    <span>Linkdin :</span>
-                    <span id="Linkedin">{{ data.linkedin }}</span>
-                </div>
-                <div class="row">
-                    <span>Github :</span>
-                    <span id="Github">{{ data.github }}</span>
-                </div>
-                <div class="row">
-                    <span>Portfolio :</span>
-                    <span id="Portfolio">{{ data.portfolio }}</span>
-                </div>
-            </div>
-        </div>
-
-        <h2>DOCUMENTS</h2>
-        <div class="card">
-            <div class="card-body">
-                <div class="row">
-                    <span>CV :</span>
-                    <div class="file-input">
-                        <input type="file" id="cv">
-                        <button onclick="viewFile('cv')">View</button>
-                    </div>
-                </div>
-                <div class="row">
-                    <span>Lettre de motivation :</span>
-                    <div class="file-input">
-                        <input type="file" id="lettre">
-                        <button onclick="viewFile('lettre')">View</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <button onclick="saveProfile()">Save Profile</button>
-    </div>
-    <!-- End -->
-    <script>
+        <script>
         // Fonction pour basculer l'édition des champs de texte dans les cartes
         function toggleEdit(icon) {
             const cardBody = icon.parentElement;
@@ -275,5 +294,5 @@
             window.location.href = '/logout';
         }
     </script>
-</body>
+    </body>
 </html>
