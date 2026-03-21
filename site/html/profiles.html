@@ -25,7 +25,7 @@
                 </a>
             </li>
             <li>
-                <a href="#sign-out">
+                <a href="/signout">
                     <i class="fa fa-sign-out-alt fa-2x"></i>
                 </a>
             </li>
@@ -49,7 +49,7 @@
 
         <div class="sidenav-url">
             <div class="url">
-                <a href="#profile" class="active">Profile</a>
+                <a href="/profile" class="active">Profile</a>
                 <hr align="center">
             </div>
         </div>
@@ -150,122 +150,71 @@
     </div>
     <!-- End -->
     <script>
-        // Fonction pour basculer l'édition des champs de texte dans les cartes
+        // Bascule l'édition (Texte)
         function toggleEdit(icon) {
-            const cardBody = icon.parentElement;
-            const spans = cardBody.querySelectorAll('.row span:last-child');
-            spans.forEach(span => {
-                if (span.contentEditable === 'true') {
-                    span.contentEditable = 'false';
-                    span.style.backgroundColor = '';
-                } else {
-                    span.contentEditable = 'true';
-                    span.style.backgroundColor = '#f0f0f0';
-                }
-            });
+            toggleCommon(icon.parentElement.querySelectorAll('.row span:last-child'));
         }
 
-        // Fonction pour basculer l'édition de la description
+        // Bascule l'édition (Description)
         function toggleEditDesc(icon) {
-            const cardBody = icon.parentElement;
-            const p = cardBody.querySelector('p');
-            if (p.contentEditable === 'true') {
-                p.contentEditable = 'false';
-                p.style.backgroundColor = '';
-            } else {
-                p.contentEditable = 'true';
-                p.style.backgroundColor = '#f0f0f0';
-            }
+            toggleCommon([icon.parentElement.querySelector('p')]);
         }
 
-        // Fonction pour afficher un fichier sélectionné dans une nouvelle fenêtre
-        function viewFile(id) {
-            const input = document.getElementById(id);
-            if (input.files[0]) {
-                const url = URL.createObjectURL(input.files[0]);
-                window.open(url, '_blank');
-                return;
-            }
-
-            // Si aucun fichier local sélectionné, on tente d'ouvrir le fichier déjà sauvegardé
-            let savedPath = '';
-            if (id === 'cv' && '{{ data.cv.path or "" }}') {
-                savedPath = '{{ data.cv.path }}';
-            } else if (id === 'lettre' && '{{ data.lettre.path or "" }}') {
-                savedPath = '{{ data.lettre.path }}';
-            }
-            if (savedPath) {
-                window.open(savedPath, '_blank');
-            } else {
-                alert('No file selected or saved');
-            }
-        }
-
-        // Fonction pour déclencher la sélection de fichier pour la photo de profil
-        function uploadProfilePic() {
-            const input = document.getElementById('profile-pic-input');
-            input.click();
-        }
-
-        // Fonction pour changer la photo de profil avec le fichier sélectionné
-        function changeProfilePic(input) {
-            if (input.files[0]) {
-                const url = URL.createObjectURL(input.files[0]);
-                document.querySelector('.profile img').src = url;
-            }
-        }
-
-        // Fonction pour sauvegarder le profil en envoyant les données au serveur
-        function saveProfile() {
-            const formData = new FormData();
-
-            // Ajouter les champs texte
-            formData.append('lastname', document.getElementById('lastname').textContent.trim());
-            formData.append('firstname', document.getElementById('firstname').textContent.trim());
-            formData.append('email', document.getElementById('email').textContent.trim());
-            formData.append('phone', document.getElementById('phone').textContent.trim());
-            formData.append('address', document.getElementById('address').textContent.trim());
-            formData.append('hobbies', document.getElementById('hobbies').textContent.trim());
-            formData.append('job', document.getElementById('job').textContent.trim());
-            formData.append('skills', document.getElementById('skills').textContent.trim());
-            formData.append('description', document.getElementById('description').textContent.trim());
-            formData.append('linkedin', document.getElementById('linkedin').textContent.trim());
-            formData.append('github', document.getElementById('github').textContent.trim());
-            formData.append('portfolio', document.getElementById('portfolio').textContent.trim());
-
-            // Ajouter les fichiers
-            const profilePicInput = document.getElementById('profile-pic-input');
-            if (profilePicInput.files[0]) {
-                formData.append('profile_pic', profilePicInput.files[0]);
-            }
-
-            const cvInput = document.getElementById('cv');
-            if (cvInput.files[0]) {
-                formData.append('cv', cvInput.files[0]);
-            }
-
-            const lettreInput = document.getElementById('lettre');
-            if (lettreInput.files[0]) {
-                formData.append('lettre', lettreInput.files[0]);
-            }
-
-            fetch('/save_profile', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.status === 'success') {
-                    alert('Profile saved successfully!');
-                    location.reload();
-                } else {
-                    alert('Error saving profile.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error saving profile.');
+        function toggleCommon(elements) {
+            elements.forEach(el => {
+                const isEdit = el.contentEditable === 'true';
+                el.contentEditable = !isEdit;
+                el.style.backgroundColor = isEdit ? '' : '#f0f0f0';
             });
+        }
+
+        // Preview Fichier / Photo
+        function viewFile(id) {
+            const file = document.getElementById(id).files[0];
+            if (file) window.open(URL.createObjectURL(file), '_blank');
+            else {
+                // Liens existants injectés par Jinja
+                const paths = {
+                    'cv': '{{ data.cv.path }}',
+                    'lettre': '{{ data.lettre.path }}'
+                };
+                if(paths[id]) window.open(paths[id], '_blank');
+                else alert('Aucun fichier disponible');
+            }
+        }
+
+        function uploadProfilePic() { document.getElementById('profile-pic-input').click(); }
+
+        function changeProfilePic(input) {
+            if (input.files[0]) document.querySelector('.profile img').src = URL.createObjectURL(input.files[0]);
+        }
+
+        // SAUVEGARDE
+        function saveProfile() {
+            const fd = new FormData();
+
+            // Récupère le texte des champs éditables
+            ['lastname', 'firstname', 'email', 'phone', 'address', 'hobbies',
+                'job', 'skills', 'description', 'linkedin', 'github', 'portfolio'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) fd.append(id, el.innerText.trim());
+            });
+
+            // Récupère les fichiers
+            const files = { 'profile-pic-input': 'profile_pic', 'cv': 'cv', 'lettre': 'lettre' };
+            for (const [inputId, formName] of Object.entries(files)) {
+                const input = document.getElementById(inputId);
+                if (input && input.files[0]) fd.append(formName, input.files[0]);
+            }
+
+            // Envoi
+            fetch('/profile', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(d => {
+                    if(d.status === 'success') location.reload();
+                    else alert('Erreur: ' + (d.message || 'Inconnue'));
+                })
+                .catch(e => { console.error(e); alert('Erreur serveur'); });
         }
     </script>
 </body>

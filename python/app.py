@@ -157,34 +157,92 @@ def register_post():
 @app.route('/profile', methods=['GET', 'POST'])
 @csrf.exempt
 def profile():
-    # GET
-    if request.method == 'GET':
-        user_id = request.cookies.get('UserID')
-        if not user_id:
-            return redirect('/login')
+    user_id = request.cookies.get('UserID')
+    if not user_id:
+        return redirect('/login')
 
-        conn = db_connection()
-        cursor = conn.cursor(dictionary=True)
+    conn = db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # --- GET: Affichage du profil ---
+    if request.method == 'GET':
         cursor.execute("SELECT * FROM Utilisateurs WHERE id = %s", (user_id,))
         row = cursor.fetchone()
         cursor.close()
         conn.close()
 
-        if row is None:
+        if not row:
             resp = make_response(redirect('/login'))
             resp.delete_cookie('UserID')
-            return redirect('/login')
+            return resp
 
-        for file_field in ['profile_pic', 'cv', 'lettre']:
-            if file_field not in row or not row[file_field]:
-                row[file_field] = {'path': ''}
-            elif isinstance(row[file_field], str):
-                row[file_field] = {'path': row[file_field]}
+        # Mapping propre DB -> HTML
+        data = {
+            'lastname': row.get('Nom', ''),
+            'firstname': row.get('Prenom', ''),
+            'email': row.get('Email', ''),
+            'phone': row.get('Telephone', ''),
+            'address': row.get('Adresse', ''),
+            'hobbies': row.get('Loisirs', ''),
+            'job': row.get('Emplois', ''),
+            'skills': row.get('Compétences', ''),
+            'description': row.get('Description', ''),
+            'linkedin': row.get('Linkedin', ''),
+            'github': row.get('Github', ''),
+            'portfolio': row.get('Portfolio', ''),
+            'profile_pic': {'path': row.get('PdP') or ''},
+            'cv': {'path': row.get('CV') or ''},
+            'lettre': {'path': row.get('LM') or ''}
+        }
+        return render_template('profiles.html', data=data)
 
-        return render_template('profiles.html', data=row)
-
+    # --- POST: Mise à jour du profil ---
     elif request.method == 'POST':
-        return render_template("profiles.html", data={'profile_pic': {'path': ''}})
+        try:
+            # 1. Mise à jour des champs texte
+            update_sql = """
+                         UPDATE Utilisateurs SET
+                                                 Nom=%s, Prenom=%s, Email=%s, Telephone=%s, Adresse=%s,
+                                                 Loisirs=%s, Emplois=%s, Compétences=%s, Description=%s,
+                                                 Linkedin=%s, Github=%s, Portfolio=%s \
+                         """
+            params = [
+                request.form.get('lastname'), request.form.get('firstname'),
+                request.form.get('email'), request.form.get('phone'),
+                request.form.get('address'), request.form.get('hobbies'),
+                request.form.get('job'), request.form.get('skills'),
+                request.form.get('description'), request.form.get('linkedin'),
+                request.form.get('github'), request.form.get('portfolio')
+            ]
+
+            # 2. Gestion des fichiers
+            # On stocke dans le dossier 'uploads/users/' pour utiliser votre route existante
+            file_map = {'profile_pic': 'PdP', 'cv': 'CV', 'lettre': 'LM'}
+            upload_path = os.path.join(app.config['UPLOAD_FOLDER'], 'users')
+            os.makedirs(upload_path, exist_ok=True)
+
+            for field, col in file_map.items():
+                file = request.files.get(field)
+                if file and file.filename:
+                    filename = secure_filename(f"{user_id}_{field}_{file.filename}")
+                    file.save(os.path.join(upload_path, filename))
+
+                    # On ajoute la mise à jour de la colonne fichier à la requête
+                    update_sql += f", {col}=%s"
+                    params.append(f"/uploads/users/{filename}")
+
+            update_sql += " WHERE id=%s"
+            params.append(user_id)
+
+            cursor.execute(update_sql, params)
+            conn.commit()
+            return jsonify({'status': 'success'})
+
+        except Exception as e:
+            return jsonify({'status': 'error', 'message': str(e)}), 500
+        finally:
+            cursor.close()
+            conn.close()
 
 @app.route("/recherche", methods=["GET", "POST"])
 def recherche():
