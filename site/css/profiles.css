@@ -7,15 +7,27 @@ input{
     display: flex;
     border: none;
     border-bottom: 1px solid rgb(74, 189, 238);
-    width: 100%;
+    width: 95%;
     box-sizing: border-box;
+}
+
+input:focus{
+    outline: none;
+}
+
+.separation {
+    margin-top: 5rem;
 }
 
 .row{
     display: flex;
     flex-direction: column;
-    width: 90%;
     gap: 1rem;
+}
+
+.editable{
+    max-width: 90%;
+    border-bottom: 1px solid rgb(74, 189, 238);
 }
 
 
@@ -25,7 +37,6 @@ input{
     justify-content: space-between;
     background: rgb(255, 255, 255);
     align-items: center;
-    gap: 0rem;
     padding-right: 2rem;
     text-decoration: none;
 }
@@ -54,59 +65,64 @@ input{
     width: 20rem;
     border: 2pt solid rgb(74, 189, 238);
     background-color: white;
-    border-radius: 10rem;
-    margin-top: 2rem;
+    border-radius: 2rem;
+    box-shadow: 1px 1px 15px 3px rgba(162, 162, 162, 0.541);
 }
 
 .box_milieu_principale {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     background-color: #ffffff;
-    background-size: contain;
-    margin-top: 1rem;
+    margin: 0 auto;
+    box-sizing: content-box;
+    border-radius: 10pt;
+    max-width: 90%;
+    width: 100%;
+    padding-bottom: 10pt;
+    box-shadow: 1px 1px 15px 3px rgba(0, 0, 0, 0.541);
+    max-height: 200vh;
 }
 
 .box_milieu {
     display: flex;
     flex-direction: column;
-    width: 90%;
-    align-items: flex-start;
-    margin-top: 1rem;
+    margin: 0 auto;
+    margin-top: 7rem;
+    max-height: 200vh;
 }
 
 .box_identite_description{
     display: flex;
     flex-direction: row;
-    max-width: 200vh;
-    gap: 3rem;
-    margin: 5rem 0rem 0rem 5rem;
+    max-width: 210vh;
+    gap: 1rem;
 }
 
 .section_identite {
     display: flex;
     flex-direction: column;
     width: 80vh;
-    max-height: 150vh;
-    gap: 2rem;
-    border: 2pt solid rgb(74, 189, 238);
+    height: 125vh;
+    padding-left: 10pt;
+    gap: 1rem;
+    border: 1pt solid rgb(74, 189, 238);
     border-radius: 1rem;
-    padding: 1em 0.5em 2em 2em;
+    box-shadow: 1px 1px 7px 3px rgba(162, 162, 162, 0.541);
 }
 
-.section_identite i {
+.modif {
     display: flex;
+    flex-direction: row;
+    width: 90%;
+    height: 1em;
+    margin: 0 auto;
     justify-content: flex-end;
-    color: rgb(74, 189, 238);
-    cursor: pointer;
 }
 
 .box_reseaux_documents{
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    margin: 0rem 0rem 0rem 5rem;
-    gap: 5rem;
+    justify-content: flex-start;
+    gap: 1rem;
 }
 
 .section_reseaux{
@@ -119,11 +135,11 @@ input{
     display: flex;
     flex-direction: column;
     gap: 10px;
-    border: 2pt solid rgb(74, 189, 238);
+    border: 1pt solid rgb(74, 189, 238);
     border-radius: 1em;
     padding: 1em 0.5em 2em 2em;
     width: 80vh;
-    
+    box-shadow: 1px 1px 7px 3px rgba(162, 162, 162, 0.541);
 }
 
 .reseaux_modif i {
@@ -137,10 +153,11 @@ input{
     display: flex;
     flex-direction: column;
     gap: 10px;
-    border: 2pt solid rgb(74, 189, 238);
+    border: 1pt solid rgb(74, 189, 238);
     border-radius: 10px;
     padding: 1em 0.5em 2em 2em;
     width: 80vh;
+    box-shadow: 1px 1px 7px 3px rgba(162, 162, 162, 0.541);
 }
 
 .description_modif i{

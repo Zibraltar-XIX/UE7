@@ -99,11 +99,9 @@
 </div>
 
 <!-- Logique Backend : Affichage de l'erreur via Jinja/Alert (comme login) -->
-{% if error %}
 <script>
     alert({{ error|tojson }});
 </script>
-{% endif %}
 
 <script>
     // On garde juste cette fonction utile pour le visuel du formulaire

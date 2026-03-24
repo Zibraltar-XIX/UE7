@@ -4,8 +4,6 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Profile Page</title>
-
-        <!-- Custom Css -->
         <link rel="stylesheet" href="../css/profiles.css">
         <link rel="stylesheet" href="../css/main.css">
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,7 +18,7 @@
                 <ul>
                     <li><a href="/">< Accueil</a></li>
                 </ul>
-                <p>PROFIL</p> 
+                <p>PROFIL</p>
                 <ul>
                     <li><a href="/profil">Déconnexion</a></li>
                 </ul>
@@ -28,10 +26,8 @@
 
             <div class="profil">
                 <div class="box_profil">
-                    <!-- Image de profil cliquable pour uploader une nouvelle -->
                     <img src="{{ data.PdP.path or '' }}" alt width="100"
                         height="100" onclick="uploadProfilePic()">
-                    <!-- Input caché pour sélectionner le fichier image -->
                     <input type="file" id="profile-pic-input"
                         style="display: none;"
                         accept="image/*" onchange="changeProfilePic(this)">
@@ -47,252 +43,230 @@
                 <div class="box_milieu">
                     <div class="box_identite_description">
                         <div class="box_identite">
-                            <h2>IDENTITE</h2>
                             <div class="section_identite">
-                                <i class="fa fa-pen fa-xs edit"
-                                    onclick="toggleEdit()"></i>
-                                <div class="row">
-                                    <span>Last Name :</span>
-                                    <input type="text" placeholder="Votre...">
+                                <h2>IDENTITE</h2>
+                                <div class="modif">
+                                    <button
+                                        onclick="toggleEdit('.section_identite')">modifier</button>
                                 </div>
                                 <div class="row">
-                                    <span>First Name :</span>
-                                    <input type="text" placeholder="Votre...">
+                                    <span>Nom :</span>
+                                    <span id="Nom" class="editable">Votre Nom</span>
+                                </div>
+                                <div class="row">
+                                    <span>Prénom :</span>
+                                    <span id="Prenom" class="editable">Votre prénom</span>
                                 </div>
                                 <div class="row">
                                     <span>Email :</span>
-                                    <input type="text" placeholder="Votre...">
+                                    <span id="Email" class="editable">Votre email</span>
                                 </div>
                                 <div class="row">
-                                    <span>Phone :</span>
-                                    <input type="text" placeholder="Votre...">
+                                    <span>Téléphone :</span>
+                                    <span id="Telephone" class="editable">Votre téléphone</span>
                                 </div>
                                 <div class="row">
-                                    <span>Address :</span>
-                                    <input type="text" placeholder="Votre adresse...">
+                                    <span>Addresse :</span>
+                                    <span id="Adresse" class="editable">Votre adresse</span>
                                 </div>
                                 <div class="row">
-                                    <span>Hobbies :</span>
-                                    <input type="text" placeholder="Vos loisirs">
+                                    <span>Loisirs :</span>
+                                    <span id="Hobbies" class="editable">Vos loisirs</span>
                                 </div>
                                 <div class="row">
                                     <span>Job recherché :</span>
-                                    <input type="text" placeholder="Votre...">
+                                    <span id="Jobs" class="editable">Le job</span>
                                 </div>
                                 <div class="row">
-                                    <span>Skills :</span>
-                                    <input type="text" placeholder="Votre...">
+                                    <span>compétences :</span>
+                                    <span id="Skills" class="editable">Vos compétences</span>
                                 </div>
                                 <h2>DESCRIPTION</h2>
                                 <div class="description_modif">
-                                <i class="fa fa-pen fa-xs edit"
-                                    onclick="toggleEditDesc(this)"></i>
-                                <input type="text" placeholder="Votre description" maxlength="100" size="60">
-                            </div>
-                            </div>
-                        </div>
-                    
-                    <div class="box_reseaux_documents">
-                        <div class="section_reseaux">
-                            <h2>RESAUX ET SITES</h2>
-                            <div class="reseaux_modif">
-                                <i class="fa fa-pen fa-xs edit"
-                                    onclick="toggleEdit(this)"></i>
-                                <div class="row">
-                                    <span>Linkdin :</span>
-                                    <span>="Linkedin">{{ data.linkedin }}</span>
-                                </div>
-                                <div class="row">
-                                    <span>Github :</span>
-                                    <span>="Github">{{ data.github }}</span>
-                                </div>
-                                <div class="row">
-                                    <span>Portfolio :</span>
-                                    ="Portfolio">{{ data.portfolio }}</span>
+                                    <p id="Description" class="editable">Votre description</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="section_documents">
-                            <h2>DOCUMENTS</h2>
-                            <div class="documents_modif">
-                                <div class="row">
-                                    <span>CV :</span>
-                                    <div class="file-input">
-                                        <input type="file" id="cv">
-                                        <button onclick="viewFile('cv')">View</button>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <span>Lettre de motivation :</span>
-                                    <div class="file-input">
-                                        <input type="file" id="lettre">
+                        <div class="box_reseaux_documents">
+                            <div class="section_reseaux">
+                                <div class="reseaux_modif">
+                                    <h2>RESAUX ET SITES</h2>
+                                    <div class="modif">
                                         <button
-                                            onclick="viewFile('lettre')">View</button>
+                                            onclick="toggleEdit('.reseaux_modif')">modifier</button>
+                                    </div>
+                                    <div class="row">
+                                        <span>Linkedin :</span>
+                                        <span id="Linkedin"
+                                            class="editable link-placeholder">Coller le lien ici</span>
+                                    </div>
+                                    <div class="row">
+                                        <span>Github :</span>
+                                        <span id="Github"
+                                            class="editable link-placeholder">Coller le lien ici</span>
+                                    </div>
+                                    <div class="row">
+                                        <span>Portfolio :</span>
+                                        <span id="Portfolio"
+                                            class="editable link-placeholder">Coller le lien ici</span>
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="section_documents">
+                                <div class="documents_modif">
+                                    <h2>DOCUMENTS</h2>
+                                    <div class="row">
+                                        <span>CV :</span>
+                                        <div class="file-input">
+                                            <input type="file" id="cv">
+                                            <button
+                                                onclick="viewFile('cv')">View</button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <span>Lettre de motivation :</span>
+                                        <div class="file-input">
+                                            <input type="file" id="lettre">
+                                            <button
+                                                onclick="viewFile('lettre')">View</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="saveProfile()">Save
+                                Profile</button>
                         </div>
-                        <button onclick="saveProfile()">Save Profile</button>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="background">
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <!-- End -->
-        <script>
-        // Fonction pour basculer l'édition des champs de texte dans les cartes
-        function toggleEdit(icon) {
-            const cardBody = icon.parentElement;
-            const spans = cardBody.querySelectorAll('.row span:last-child');
-            spans.forEach(span => {
-                if (span.contentEditable === 'true') {
-                    span.contentEditable = 'false';
-                    span.style.backgroundColor = '';
-                } else {
-                    span.contentEditable = 'true';
-                    span.style.backgroundColor = '#f0f0f0';
-                }
+            <div class="background">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <!-- fin du html -->
+            <script>
+    // pour gérer la pdp
+    function uploadProfilePic() {
+        document.getElementById('profile-pic-input').click();
+    }
+
+    function changeProfilePic(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.querySelector('.box_profil img').src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // pour passer en mode édition
+    function toggleEdit(containerSelector) {
+        const container = document.querySelector(containerSelector);
+        const editables = container.querySelectorAll('.editable');
+        const button = container.querySelector('button');
+
+        if (button.innerText.toLowerCase() === 'modifier') {
+            editables.forEach(el => {
+                const currentValue = el.innerText === 'Coller le lien ici' || el.innerText.includes('Votre') ? '' : el.innerText;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentValue;
+                input.className = 'edit-input';
+                input.dataset.originalId = el.id; // on garde l'id
+                el.replaceWith(input);
             });
+            button.innerText = 'Valider';
+        } else {
+            const inputs = container.querySelectorAll('input.edit-input');
+            inputs.forEach(input => {
+                const span = document.createElement('span');
+                span.id = input.dataset.originalId;
+                span.className = 'editable';
+                span.innerText = input.value || 'Non renseigné';
+                input.replaceWith(span);
+            });
+            button.innerText = 'modifier';
         }
+    }
 
-        // Fonction pour basculer l'édition de la description
-        function toggleEditDesc(icon) {
-            const cardBody = icon.parentElement;
-            const p = cardBody.querySelector('p');
-            if (p.contentEditable === 'true') {
-                p.contentEditable = 'false';
-                p.style.backgroundColor = '';
-            } else {
-                p.contentEditable = 'true';
-                p.style.backgroundColor = '#f0f0f0';
-            }
+    // pour la visualisation des fichiers déposés
+    function viewFile(inputId) {
+        const file = document.getElementById(inputId).files[0];
+        if (file) {
+            const fileURL = URL.createObjectURL(file);
+            window.open(fileURL, '_blank');
+        } else {
+            alert("Aucun fichier sélectionné.");
         }
+    }
 
-        // Fonction pour afficher un fichier sélectionné dans une nouvelle fenêtre
-        function viewFile(id) {
-            const input = document.getElementById(id);
-            if (input.files[0]) {
-                const url = URL.createObjectURL(input.files[0]);
-                window.open(url, '_blank');
-                return;
-            }
+    // pour la save globale
+    async function saveProfile() {
+        const formData = new FormData();
 
-            // Si aucun fichier local sélectionné, on tente d'ouvrir le fichier déjà sauvegardé
-            let savedPath = '';
-            if (id === 'cv' && '{{ data.CV.path or "" }}') {
-                savedPath = '{{ data.CV.path }}';
-            } else if (id === 'lettre' && '{{ data.LM.path or "" }}') {
-                savedPath = '{{ data.LM.path }}';
-            }
-            if (savedPath) {
-                window.open(savedPath, '_blank');
-            } else {
-                alert('No file selected or saved');
-            }
-        }
+        // récup des textes
+        const fields = document.querySelectorAll('.editable, .edit-input');
+        fields.forEach(field => {
+            const key = field.id || field.dataset.originalId;
+            const value = field.value !== undefined ? field.value : field.innerText;
+            if (key) formData.append(key, value);
+        });
 
-        // Fonction pour déclencher la sélection de fichier pour la photo de profil
-        function uploadProfilePic() {
-            const input = document.getElementById('profile-pic-input');
-            input.click();
-        }
+        // récup de l'image de la pdpd
+        const profilePic = document.getElementById('profile-pic-input').files[0];
+        if (profilePic) formData.append('profilePic', profilePic);
 
-        // Fonction pour changer la photo de profil avec le fichier sélectionné
-        function changeProfilePic(input) {
-            if (input.files[0]) {
-                const url = URL.createObjectURL(input.files[0]);
-                document.querySelector('.profile img').src = url;
-            }
-        }
+        // récup des docs
+        const cvFile = document.getElementById('cv').files[0];
+        const lettreFile = document.getElementById('lettre').files[0];
+        if (cvFile) formData.append('cv', cvFile);
+        if (lettreFile) formData.append('lettre', lettreFile);
 
-        // Fonction pour sauvegarder le profil en envoyant les données au serveur
-        function saveProfile() {
-            const formData = new FormData();
-
-            // Ajouter les champs texte
-            formData.append('id', document.cookie.split('; ').find(row => row.startsWith('UserID=')).split('=')[1]);
-            formData.append('Nom', document.getElementById('Nom').textContent.trim());
-            formData.append('Prenom', document.getElementById('Prenom').textContent.trim());
-            formData.append('Email', document.getElementById('Email').textContent.trim());
-            formData.append('Telephone', document.getElementById('Telephone').textContent.trim());
-            formData.append('Adresse', document.getElementById('Adresse').textContent.trim());
-            formData.append('Hobbies', document.getElementById('Hobbies').textContent.trim());
-            formData.append('Jobs', document.getElementById('Jobs').textContent.trim());
-            formData.append('Skills', document.getElementById('Skills').textContent.trim());
-            formData.append('Description', document.getElementById('Description').textContent.trim());
-            formData.append('Linkedin', document.getElementById('Linkedin').textContent.trim());
-            formData.append('Github', document.getElementById('Github').textContent.trim());
-            formData.append('Portfolio', document.getElementById('Portfolio').textContent.trim());
-
-            // Ajouter les fichiers
-            const profilePicInput = document.getElementById('profile-pic-input');
-            if (profilePicInput.files[0]) {
-                formData.append('profile_pic', profilePicInput.files[0]);
-            }
-
-            const cvInput = document.getElementById('cv');
-            if (cvInput.files[0]) {
-                formData.append('cv', cvInput.files[0]);
-            }
-
-            const lettreInput = document.getElementById('lettre');
-            if (lettreInput.files[0]) {
-                formData.append('lettre', lettreInput.files[0]);
-            }
-
-            fetch('/save_profile', {
+        try {
+            const response = await fetch('/update-profile', {
                 method: 'POST',
                 body: formData
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.status === 'success') {
-                    alert('Profile saved successfully!');
-                    location.reload();
-                } else {
-                    alert('Error saving profile.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error saving profile.');
             });
-        }
 
-        // Fonction pour se déconnecter
-        function signOut() {
-            window.location.href = '/logout';
+            if (response.ok) {
+                alert('Profil mis à jour avec succès !');
+            } else {
+                alert('Erreur lors de la sauvegarde.');
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert('Impossible de contacter le serveur.');
         }
-    </script>
-    </body>
-</html>
+    }
+</script>
+        </body>
+    </html>
