@@ -38,7 +38,7 @@ class RechercheForm(FlaskForm):
 
 # Connection à la base de donnée
 def db_connection():
-    conn = mysql.connector.connect(host="db", user="user", password="mdp", database="main")
+    conn = mysql.connector.connect(host="db", user="alternance", password="mdptahlesfou", database="main")
     return conn
 
 
@@ -50,13 +50,11 @@ profile_data = {
     'Email': '',
     'Telephone': '',
     'Adresse': '',
-    'Hobbies': '',
-    'Jobs': '',
-    'Skills': '',
+    'Loisirs': '',
+    'Emplois': '',
+    'Competences': '',
     'Description': '',
-    'linkedin': '',
-    'github': '',
-    'portfolio': '',
+    'Web': '',
     'PdP': {'path': '', 'filename': ''},  # Chemin et nom du fichier
     'CV': {'path': '', 'filename': ''},
     'LM': {'path': '', 'filename': ''}
@@ -85,6 +83,11 @@ def src_file(filename):
 def home():
     return render_template('home.html')
 
+def to_str(val):
+    if isinstance(val, (bytes, bytearray)):
+        return val.decode('utf-8')
+    return val or ''
+
 @app.route('/profile', methods=['POST', 'GET'])
 def profile():
     user_id = request.cookies.get('UserID')
@@ -95,9 +98,16 @@ def profile():
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM Utilisateurs WHERE id = %s", (user_id,))
     row = cursor.fetchone()
+    cursor.close()
+    conn.close()
 
     if row is None:
         return redirect('/logout')
+
+    web_raw   = row.get('Web', '') or ''
+    web_parts = [p.strip() for p in web_raw.split(',')]
+    while len(web_parts) < 3:
+        web_parts.append('')
 
     # Remplir profile_data avec les données de la DB
     data = {
@@ -107,16 +117,16 @@ def profile():
         'Email':       row.get('Email', ''),
         'Telephone':   row.get('Telephone', ''),
         'Adresse':     row.get('Adresse', ''),
-        'Hobbies':     row.get('Hobbies', ''),
-        'Jobs':        row.get('Jobs', ''),
-        'Skills':      row.get('Skills', ''),
-        'Description': row.get('Description', ''),
-        'linkedin':    row.get('linkedin', ''),
-        'github':      row.get('github', ''),
-        'portfolio':   row.get('portfolio', ''),
-        'PdP':         {'path': row.get('PdP', ''), 'filename': ''},
-        'CV':          {'path': row.get('CV', ''),  'filename': ''},
-        'LM':          {'path': row.get('LM', ''),  'filename': ''},
+        'Loisirs':     row.get('Loisirs', ''),
+        'Emplois':        row.get('Emplois', ''),
+        'Competences':      row.get('Competences', ''),
+        'Description':      row.get('Description', ''),
+        'Linkedin':     web_parts[0],
+        'Github':      web_parts[1],
+        'Portfolio':   web_parts[2],
+        'PdP': to_str(row.get('PdP', '')),
+        'CV':  to_str(row.get('CV', '')),
+        'LM':  to_str(row.get('LM', '')),
     }
 
     return render_template('profiles.html', data=data)
@@ -212,7 +222,7 @@ def _save_upload(field_name: str, category: str) -> dict:
     """Save uploaded file and return its stored path + filename."""
     file = request.files.get(field_name)
     if not file or not file.filename:
-        return {'path': '', 'filename': ''}
+        return ''
 
     category_dir = os.path.join(app.config['UPLOAD_FOLDER'], category)
     os.makedirs(category_dir, exist_ok=True)
@@ -221,7 +231,7 @@ def _save_upload(field_name: str, category: str) -> dict:
     save_path = os.path.join(category_dir, filename)
     file.save(save_path)
 
-    return {'path': f'/uploads/{category}/{filename}', 'filename': filename}
+    return f'/uploads/{category}/{filename}'
 
 
 @app.route('/save_profile', methods=['POST'])
@@ -229,20 +239,44 @@ def _save_upload(field_name: str, category: str) -> dict:
 def save_profile():
     global profile_data
 
-    # Champs texte
-    for key in ('id', 'Nom', 'Prenom', 'Email', 'Telephone', 'Adresse', 'Hobbies', 'Jobs', 'Skills', 'Description', 'Linkedin', 'Github', 'Portfolio'):
+    # Champs texte simples
+    for key in ('id', 'Nom', 'Prenom', 'Email', 'Telephone', 'Adresse', 'Loisirs', 'Emplois', 'Competences', 'Description'):
         profile_data[key] = request.form.get(key, '')
 
-    # Fichiers
+    # Web : 3 champs → une string "linkedin,github,portfolio"
+    linkedin  = request.form.get('Linkedin', '').strip()
+    github    = request.form.get('Github', '').strip()
+    portfolio = request.form.get('Portfolio', '').strip()
+    profile_data['Web'] = f"{linkedin},{github},{portfolio}"
+
+    # Fichiers (retournent maintenant une string path, plus un dict)
     profile_data['PdP'] = _save_upload('profile_pic', 'profile_pics')
-    profile_data['CV'] = _save_upload('cv', 'cv')
-    profile_data['LM'] = _save_upload('lettre', 'lettres')
-    print("Profile data updated:", profile_data)  # Debug log
-    conn = db_connection()
+    profile_data['CV']  = _save_upload('cv', 'cv')
+    profile_data['LM']  = _save_upload('lettre', 'lettres')
+
+    conn   = db_connection()
     cursor = conn.cursor(dictionary=True)
-    for data in profile_data:
-        if profile_data[data] != "" and data != "id":
-            cursor.execute("UPDATE Utilisateurs SET {} = %s WHERE id = %s".format(data), (profile_data[data], profile_data['id']))
+
+    # Champs texte → UPDATE direct
+    for key in ('Nom', 'Prenom', 'Email', 'Telephone', 'Adresse', 'Loisirs', 'Emplois', 'Competences', 'Description', 'Web'):
+        if profile_data[key]:
+            cursor.execute(
+                f"UPDATE Utilisateurs SET `{key}` = %s WHERE id = %s",
+                (profile_data[key], profile_data['id'])
+            )
+
+    # Fichiers → UPDATE seulement si un nouveau fichier a été uploadé
+    for key in ('PdP', 'CV', 'LM'):
+        if profile_data[key]:
+            cursor.execute(
+                f"UPDATE Utilisateurs SET `{key}` = %s WHERE id = %s",
+                (profile_data[key], profile_data['id'])
+            )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
     return jsonify({'status': 'success'})
 
 @app.route("/recherche", methods=["GET", "POST"])
