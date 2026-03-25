@@ -93,7 +93,7 @@ def home():
         return "<h1>Perdu ?</h1>"
 
 # Page de profil
-@app.route('/profile', methods=['POST', 'GET'])
+@app.route('/profil', methods=['POST', 'GET'])
 @csrf.exempt
 def profil():
     user_id = request.cookies.get('UserID')
@@ -130,7 +130,7 @@ def profil():
         'LM':  to_str(row.get('LM', '')),
     }
 
-    return render_template('profiles.html', data=data)
+    return render_template('profil.html', data=data)
 
 @app.route('/save_profile', methods=['POST'])
 @csrf.exempt
@@ -214,7 +214,7 @@ def login():
         cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
         row = cursor.fetchone()
         if row is None:
-            return render_template("login.html", error="Utilisateur inconnu")
+            return render_template("register.html", error="Utilisateur inconnu")
         user_id = row['id']
 
         # Vérification du mot de passe
@@ -222,14 +222,14 @@ def login():
         row = cursor.fetchone()
         MotDePass = row['MotDePasse']
         if str(password) != str(MotDePass):
-            return render_template("login.html", error="Le mot de passe est différent de " + MotDePass)
+            return render_template("login.html", error="Le mot de passe est différent de : " + MotDePass)
 
         # Fermeture de la connexion avec la DB
         cursor.close()
         db.close()
 
         # Redirection vers le profil avec le cookie
-        resp = make_response(redirect('/profile'))
+        resp = make_response(redirect('/profil'))
         resp.set_cookie('UserID', str(user_id))
         return resp
 
@@ -281,7 +281,7 @@ def register():
         except mysql.connector.Error as err:
             return render_template("register.html", error=f"Erreur DB : {err}"), 500
 
-        resp = make_response(redirect('/profile'))
+        resp = make_response(redirect('/profil'))
         resp.set_cookie('UserID', str(user_id))
         return resp
 
@@ -304,7 +304,7 @@ def recherche():
         candidats = [
         ]
 
-    template_path = os.path.join(app.template_folder, "recherche_profils_candidats.html")
+    template_path = os.path.join(app.template_folder, "recherche.html")
 
     with open(template_path, "r", encoding="utf-8") as f:
         template_str = f.read()
