@@ -1,16 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Profile Page</title>
-        <link rel="stylesheet" href="../css/profiles.css">
-        <link rel="stylesheet" href="../css/main.css">
+        <link rel="stylesheet" href="/site/css/profiles.css">
+        <link rel="stylesheet" href="/site/css/main.css">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link
-            href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
-            rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
     </head>
     <body>
         <div class="main">
@@ -26,16 +24,10 @@
 
             <div class="profil">
                 <div class="box_profil">
-                    <img src="{{ data.PdP.path or '' }}" alt width="100"
-                        height="100" onclick="uploadProfilePic()">
-                    <input type="file" id="profile-pic-input"
-                        style="display: none;"
-                        accept="image/*" onchange="changeProfilePic(this)">
-
-                    <div class="name">
-                    </div>
-                    <div class="job">
-                    </div>
+                    <img src="{{ data.PdP or '' }}" alt="Photo de profil" width="100" height="100" onclick="uploadProfilePic()" style="cursor:pointer; border-radius:50%; object-fit:cover;">
+                    <input type="file" id="profile-pic-input" style="display: none;" accept="image/*" onchange="changeProfilePic(this)">
+                    <div class="name"></div>
+                    <div class="job"></div>
                 </div>
             </div>
 
@@ -46,44 +38,44 @@
                             <div class="section_identite">
                                 <h2>IDENTITE</h2>
                                 <div class="modif">
-                                    <button
-                                        onclick="toggleEdit('.section_identite')">modifier</button>
+                                    <button onclick="toggleEdit('.section_identite')">modifier</button>
                                 </div>
                                 <div class="row">
                                     <span>Nom :</span>
-                                    <span id="Nom" class="editable">Votre Nom</span>
+                                    <span id="Nom" class="editable">{{ data.Nom or '' }}</span>
                                 </div>
                                 <div class="row">
                                     <span>Prénom :</span>
-                                    <span id="Prenom" class="editable">Votre prénom</span>
+                                    <span id="Prenom" class="editable">{{ data.Prenom or '' }}</span>
                                 </div>
                                 <div class="row">
                                     <span>Email :</span>
-                                    <span id="Email" class="editable">Votre email</span>
+                                    <span id="Email" class="editable">{{ data.Email or '' }}</span>
                                 </div>
                                 <div class="row">
                                     <span>Téléphone :</span>
-                                    <span id="Telephone" class="editable">Votre téléphone</span>
+                                    <span id="Telephone" class="editable">{{ data.Telephone or '' }}</span>
                                 </div>
                                 <div class="row">
-                                    <span>Addresse :</span>
-                                    <span id="Adresse" class="editable">Votre adresse</span>
+                                    <span>Adresse :</span>
+                                    <span id="Adresse" class="editable">{{ data.Adresse or '' }}</span>
                                 </div>
                                 <div class="row">
                                     <span>Loisirs :</span>
-                                    <span id="Hobbies" class="editable">Vos loisirs</span>
+                                    <span id="Loisirs" class="editable">{{ data.Loisirs or '' }}</span>
                                 </div>
                                 <div class="row">
                                     <span>Job recherché :</span>
-                                    <span id="Jobs" class="editable">Le job</span>
+                                    <span id="Emplois" class="editable">{{ data.Emplois or '' }}</span>
                                 </div>
                                 <div class="row">
-                                    <span>compétences :</span>
-                                    <span id="Skills" class="editable">Vos compétences</span>
+                                    <span>Compétences :</span>
+                                    <span id="Competences" class="editable">{{ data.Competences or '' }}</span>
                                 </div>
                                 <h2>DESCRIPTION</h2>
                                 <div class="description_modif">
-                                    <p id="Description" class="editable">Votre description</p>
+                                    <i class="description_modif" onclick="toggleEditDesc()"></i>
+                                    <p id="Description" class="editable">{{ data.Description or '' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -91,25 +83,21 @@
                         <div class="box_reseaux_documents">
                             <div class="section_reseaux">
                                 <div class="reseaux_modif">
-                                    <h2>RESAUX ET SITES</h2>
+                                    <h2>RÉSEAUX ET SITES</h2>
                                     <div class="modif">
-                                        <button
-                                            onclick="toggleEdit('.reseaux_modif')">modifier</button>
+                                        <button onclick="toggleEdit('.reseaux_modif')">modifier</button>
                                     </div>
                                     <div class="row">
-                                        <span>Linkedin :</span>
-                                        <span id="Linkedin"
-                                            class="editable link-placeholder">Coller le lien ici</span>
+                                        <span>LinkedIn :</span>
+                                        <span id="Linkedin" class="editable">{{ data.Linkedin or '' }}</span>
                                     </div>
                                     <div class="row">
                                         <span>Github :</span>
-                                        <span id="Github"
-                                            class="editable link-placeholder">Coller le lien ici</span>
+                                        <span id="Github" class="editable">{{ data.Github or '' }}</span>
                                     </div>
                                     <div class="row">
                                         <span>Portfolio :</span>
-                                        <span id="Portfolio"
-                                            class="editable link-placeholder">Coller le lien ici</span>
+                                        <span id="Portfolio" class="editable">{{ data.Portfolio or '' }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -121,152 +109,133 @@
                                         <span>CV :</span>
                                         <div class="file-input">
                                             <input type="file" id="cv">
-                                            <button
-                                                onclick="viewFile('cv')">View</button>
+                                            <button onclick="viewFile('cv', '{{ data.CV or '' }}')">Voir</button>
                                         </div>
                                     </div>
                                     <div class="row">
                                         <span>Lettre de motivation :</span>
                                         <div class="file-input">
                                             <input type="file" id="lettre">
-                                            <button
-                                                onclick="viewFile('lettre')">View</button>
+                                            <button onclick="viewFile('lettre', '{{ data.LM or '' }}')">Voir</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <button onclick="saveProfile()">Save
-                                Profile</button>
+
+                            <button onclick="saveProfile()">Sauvegarder le profil</button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="background">
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span>
             </div>
-            <!-- fin du html -->
-            <script>
-    // pour gérer la pdp
-    function uploadProfilePic() {
-        document.getElementById('profile-pic-input').click();
-    }
+        </div>
 
-    function changeProfilePic(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.querySelector('.box_profil img').src = e.target.result;
-            };
-            reader.readAsDataURL(input.files[0]);
+        <script>
+        // Gestion photo de profil
+        function uploadProfilePic() {
+            document.getElementById('profile-pic-input').click();
         }
-    }
 
-    // pour passer en mode édition
-    function toggleEdit(containerSelector) {
-        const container = document.querySelector(containerSelector);
-        const editables = container.querySelectorAll('.editable');
-        const button = container.querySelector('button');
-
-        if (button.innerText.toLowerCase() === 'modifier') {
-            editables.forEach(el => {
-                const currentValue = el.innerText === 'Coller le lien ici' || el.innerText.includes('Votre') ? '' : el.innerText;
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = currentValue;
-                input.className = 'edit-input';
-                input.dataset.originalId = el.id; // on garde l'id
-                el.replaceWith(input);
-            });
-            button.innerText = 'Valider';
-        } else {
-            const inputs = container.querySelectorAll('input.edit-input');
-            inputs.forEach(input => {
-                const span = document.createElement('span');
-                span.id = input.dataset.originalId;
-                span.className = 'editable';
-                span.innerText = input.value || 'Non renseigné';
-                input.replaceWith(span);
-            });
-            button.innerText = 'modifier';
-        }
-    }
-
-    // pour la visualisation des fichiers déposés
-    function viewFile(inputId) {
-        const file = document.getElementById(inputId).files[0];
-        if (file) {
-            const fileURL = URL.createObjectURL(file);
-            window.open(fileURL, '_blank');
-        } else {
-            alert("Aucun fichier sélectionné.");
-        }
-    }
-
-    // pour la save globale
-    async function saveProfile() {
-        const formData = new FormData();
-
-        // récup des textes
-        const fields = document.querySelectorAll('.editable, .edit-input');
-        fields.forEach(field => {
-            const key = field.id || field.dataset.originalId;
-            const value = field.value !== undefined ? field.value : field.innerText;
-            if (key) formData.append(key, value);
-        });
-
-        // récup de l'image de la pdpd
-        const profilePic = document.getElementById('profile-pic-input').files[0];
-        if (profilePic) formData.append('profilePic', profilePic);
-
-        // récup des docs
-        const cvFile = document.getElementById('cv').files[0];
-        const lettreFile = document.getElementById('lettre').files[0];
-        if (cvFile) formData.append('cv', cvFile);
-        if (lettreFile) formData.append('lettre', lettreFile);
-
-        try {
-            const response = await fetch('/update-profile', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (response.ok) {
-                alert('Profil mis à jour avec succès !');
-            } else {
-                alert('Erreur lors de la sauvegarde.');
+        function changeProfilePic(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.querySelector('.box_profil img').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
             }
-        } catch (error) {
-            console.error('Erreur:', error);
-            alert('Impossible de contacter le serveur.');
         }
-    }
-</script>
-        </body>
-    </html>
+
+        // Mode édition pour les sections
+        function toggleEdit(containerSelector) {
+            const container = document.querySelector(containerSelector);
+            const editables = container.querySelectorAll('.editable');
+            const button = container.querySelector('button');
+
+            if (button.innerText.toLowerCase() === 'modifier') {
+                editables.forEach(el => {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = el.innerText;
+                    input.className = 'edit-input';
+                    input.dataset.originalId = el.id;
+                    el.replaceWith(input);
+                });
+                button.innerText = 'Valider';
+            } else {
+                const inputs = container.querySelectorAll('input.edit-input');
+                inputs.forEach(input => {
+                    const span = document.createElement('span');
+                    span.id = input.dataset.originalId;
+                    span.className = 'editable';
+                    span.innerText = input.value || '';
+                    input.replaceWith(span);
+                });
+                button.innerText = 'modifier';
+            }
+        }
+
+        // Visualisation des fichiers
+        function viewFile(inputId, savedPath) {
+            const file = document.getElementById(inputId).files[0];
+            if (file) {
+                window.open(URL.createObjectURL(file), '_blank');
+            } else if (savedPath) {
+                window.open(savedPath, '_blank');
+            } else {
+                alert("Aucun fichier sélectionné.");
+            }
+        }
+
+        // Sauvegarde du profil — IDs alignés avec app.py
+        async function saveProfile() {
+            const formData = new FormData();
+
+            // ID utilisateur depuis cookie
+            const userIdCookie = document.cookie.split('; ').find(r => r.startsWith('UserID='));
+            if (userIdCookie) formData.append('id', userIdCookie.split('=')[1]);
+
+            // Champs texte — on lit soit les .editable soit les .edit-input en cours d'édition
+            const fieldIds = ['Nom', 'Prenom', 'Email', 'Telephone', 'Adresse', 'Loisirs', 'Emplois', 'Competences', 'Description', 'Linkedin', 'Github', 'Portfolio'];
+            fieldIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    formData.append(id, el.value !== undefined && el.tagName === 'INPUT' ? el.value : el.innerText.trim());
+                }
+            });
+
+            // Fichiers
+            const profilePic = document.getElementById('profile-pic-input').files[0];
+            if (profilePic) formData.append('profile_pic', profilePic);
+
+            const cvFile = document.getElementById('cv').files[0];
+            if (cvFile) formData.append('cv', cvFile);
+
+            const lettreFile = document.getElementById('lettre').files[0];
+            if (lettreFile) formData.append('lettre', lettreFile);
+
+            try {
+                const response = await fetch('/save_profile', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    alert('Profil mis à jour avec succès !');
+                    location.reload();
+                } else {
+                    alert('Erreur lors de la sauvegarde.');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Impossible de contacter le serveur.');
+            }
+        }
+        </script>
+    </body>
+</html>
