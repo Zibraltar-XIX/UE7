@@ -1,14 +1,9 @@
-import os
-import mysql.connector
-from flask import Flask, render_template, request, jsonify, send_from_directory, make_response, send_file, make_response, redirect
+import os, mysql.connector
+from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, make_response, redirect
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, SelectField, SubmitField
 from wtforms.validators import Optional
-from dotenv import load_dotenv
-
-# Charger les variables du .env
-load_dotenv("../.env")
 
 # Définition des chemins absolus
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -45,26 +40,15 @@ def db_connection():
     conn = mysql.connector.connect(host="db", user=os.getenv("MYSQL_USER"), password=os.getenv("MYSQL_PASSWORD"), database=os.getenv("MYSQL_DATABASE"))
     return conn
 
+# Convertir path en utf8
+def to_str(val):
+    if isinstance(val, (bytes, bytearray)):
+        return val.decode('utf-8')
+    return val or ''
 
-# Stockage temporaire des données de profil (remplacer par DB plus tard)
-profile_data = {
-    'id': '',
-    'Nom': '',
-    'Prenom': '',
-    'Email': '',
-    'Telephone': '',
-    'Adresse': '',
-    'Loisirs': '',
-    'Emplois': '',
-    'Competences': '',
-    'Description': '',
-    'Web': '',
-    'PdP': {'path': '', 'filename': ''},  # Chemin et nom du fichier
-    'CV': {'path': '', 'filename': ''},
-    'LM': {'path': '', 'filename': ''}
-}
-
+# Permettre de pouvoir récupérer les fichiers uploadés
 @app.route('/uploads/<category>/<filename>')
+@csrf.exempt
 def uploaded_file(category, filename):
     # Serve a file from the uploads folder
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], category, filename)
@@ -74,32 +58,32 @@ def uploaded_file(category, filename):
 
 # Permettre de pouvoir récupérer les fichiers .css
 @app.route('/css/<path:filename>')
+@csrf.exempt
 def css_file(filename):
     return send_from_directory(os.path.join(SITE_DIR, 'css'), filename)
 
 # Permettre de pouvoir récupérer des fichiers dans /src
 @app.route('/src/<path:filename>')
+@csrf.exempt
 def src_file(filename):
     return send_from_directory(os.path.join(SITE_DIR, 'src'), filename)
 
 # Racine du site
 @app.route('/', methods=['GET', 'POST'])
+@csrf.exempt
 def home():
     if request.method == 'GET':
         return render_template('home.html')
     elif request.method == 'POST':
         return "<h1>Perdu ?</h1>"
 
-def to_str(val):
-    if isinstance(val, (bytes, bytearray)):
-        return val.decode('utf-8')
-    return val or ''
-
+# Page de profil
 @app.route('/profile', methods=['POST', 'GET'])
-def profile():
+@csrf.exempt
+def profil():
     user_id = request.cookies.get('UserID')
     if not user_id:
-        return redirect('/')
+        return redirect('/login')
     
     conn = db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -111,26 +95,21 @@ def profile():
     if row is None:
         return redirect('/logout')
 
-    web_raw   = row.get('Web', '') or ''
-    web_parts = [p.strip() for p in web_raw.split(',')]
-    while len(web_parts) < 3:
-        web_parts.append('')
-
     # Remplir profile_data avec les données de la DB
     data = {
-        'id':          row.get('id', ''),
-        'Nom':         row.get('Nom', ''),
-        'Prenom':      row.get('Prenom', ''),
-        'Email':       row.get('Email', ''),
-        'Telephone':   row.get('Telephone', ''),
-        'Adresse':     row.get('Adresse', ''),
-        'Loisirs':     row.get('Loisirs', ''),
-        'Emplois':        row.get('Emplois', ''),
-        'Competences':      row.get('Competences', ''),
-        'Description':      row.get('Description', ''),
-        'Linkedin':     web_parts[0],
-        'Github':      web_parts[1],
-        'Portfolio':   web_parts[2],
+        'id': row.get('id', ''),
+        'Nom': row.get('Nom', ''),
+        'Prenom': row.get('Prenom', ''),
+        'Email': row.get('Email', ''),
+        'Telephone': row.get('Telephone', ''),
+        'Adresse': row.get('Adresse', ''),
+        'Loisirs': row.get('Loisirs', ''),
+        'Emplois': row.get('Emplois', ''),
+        'Competences': row.get('Competences', ''),
+        'Description': row.get('Description', ''),
+        'Linkedin': row.get('Linkedin', ''),
+        'Github': row.get('Github', ''),
+        'Portfolio': row.get('Portfolio', ''),
         'PdP': to_str(row.get('PdP', '')),
         'CV':  to_str(row.get('CV', '')),
         'LM':  to_str(row.get('LM', '')),
@@ -231,7 +210,6 @@ def register():
         resp.set_cookie('UserID', str(user_id))
         return resp
 
-
 def _save_upload(field_name: str, category: str) -> dict:
     """Save uploaded file and return its stored path + filename."""
     file = request.files.get(field_name)
@@ -251,7 +229,22 @@ def _save_upload(field_name: str, category: str) -> dict:
 @app.route('/save_profile', methods=['POST'])
 @csrf.exempt
 def save_profile():
-    global profile_data
+    profile_data = {
+        'id': '',
+        'Nom': '',
+        'Prenom': '',
+        'Email': '',
+        'Telephone': '',
+        'Adresse': '',
+        'Loisirs': '',
+        'Emplois': '',
+        'Competences': '',
+        'Description': '',
+        'Web': '',
+        'PdP': {'path': '', 'filename': ''},  # Chemin et nom du fichier
+        'CV': {'path': '', 'filename': ''},
+        'LM': {'path': '', 'filename': ''}
+    }
 
     # Champs texte simples
     for key in ('id', 'Nom', 'Prenom', 'Email', 'Telephone', 'Adresse', 'Loisirs', 'Emplois', 'Competences', 'Description'):
@@ -313,6 +306,7 @@ def recherche():
         ]
 
 @app.route('/logout')
+@csrf.exempt
 def logout():
     response = make_response(redirect('/'))
     response.delete_cookie('UserID')
