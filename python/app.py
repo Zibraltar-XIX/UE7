@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, SelectField, SubmitField
 from wtforms.validators import Optional
+from dotenv import load_dotenv
 
 # Charger les variables du .env
 load_dotenv("../.env")
@@ -184,7 +185,7 @@ def login():
 def register():
     # GET
     if request.method == 'GET':
-        return render_template('register.html')
+        return render_template('register.html', error=None)
 
     # POST
     else:
@@ -230,47 +231,6 @@ def register():
         resp.set_cookie('UserID', str(user_id))
         return resp
 
-@app.route('/profile', methods=['GET', 'POST'])
-@csrf.exempt
-def profile():
-    user_id = request.cookies.get('UserID')
-    if not user_id:
-        return redirect('/login')
-
-    conn = db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    # --- GET: Affichage du profil ---
-    if request.method == 'GET':
-        cursor.execute("SELECT * FROM Utilisateurs WHERE id = %s", (user_id,))
-        row = cursor.fetchone()
-        cursor.close()
-        conn.close()
-
-        if not row:
-            resp = make_response(redirect('/login'))
-            resp.delete_cookie('UserID')
-            return resp
-
-        # Mapping propre DB -> HTML
-        data = {
-            'lastname': row.get('Nom', ''),
-            'firstname': row.get('Prenom', ''),
-            'email': row.get('Email', ''),
-            'phone': row.get('Telephone', ''),
-            'address': row.get('Adresse', ''),
-            'hobbies': row.get('Loisirs', ''),
-            'job': row.get('Emplois', ''),
-            'skills': row.get('Compétences', ''),
-            'description': row.get('Description', ''),
-            'linkedin': row.get('Linkedin', ''),
-            'github': row.get('Github', ''),
-            'portfolio': row.get('Portfolio', ''),
-            'profile_pic': {'path': row.get('PdP') or ''},
-            'cv': {'path': row.get('CV') or ''},
-            'lettre': {'path': row.get('LM') or ''}
-        }
-        return render_template('profiles.html', data=data)
 
 def _save_upload(field_name: str, category: str) -> dict:
     """Save uploaded file and return its stored path + filename."""
