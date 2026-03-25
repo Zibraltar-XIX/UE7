@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Inscription</title>
-    <!-- On garde les liens CSS originaux qui marchent pour le visuel -->
     <link rel="stylesheet" href="../css/register.css">
     <link rel="stylesheet" href="../css/main.css">
     <link rel="icon" href="../src/logo tah les fous.png">
@@ -11,28 +10,23 @@
 <body>
 <div class="box_inscription">
     <div class="register_illustration">
-        <img src="../src/register-illustration.png"
-             alt="register_illustration">
+        <img src="../src/register-illustration.png" alt="register_illustration">
     </div>
     <div class="section_input">
         <h1>Inscription</h1>
 
-        <!-- Changement ici : suppression de l'event JS, on passe en POST standard vers /register -->
         <form id="formulaire_inscription" action="/register" method="post">
 
             <div class="selection_formualire">
                 <label>Je suis :</label>
                 <div class="selection_input">
                     <label>
-                        <input type="radio" name="user_type"
-                               value="student"
-                               checked onclick="toggleField('student')">
+                        <input type="radio" name="user_type" value="student" checked onclick="toggleField('student')">
                         Étudiant
                     </label>
                     <label>
-                        <input type="radio" name="user_type"
-                               value="company"
-                               onclick="toggleField('company')"> Entreprise
+                        <input type="radio" name="user_type" value="company" onclick="toggleField('company')">
+                        Entreprise
                     </label>
                 </div>
             </div>
@@ -81,7 +75,6 @@
                 </div>
             </div>
 
-            <!-- Ce div ne sert plus à rien techniquement mais je le laisse pour ne pas casser le CSS au cas où -->
             <div id="message" style="display:none; margin-top:15px;"></div>
 
             <button type="submit">S'inscrire</button>
@@ -98,13 +91,11 @@
     <span></span><span></span>
 </div>
 
-<!-- Logique Backend : Affichage de l'erreur via Jinja/Alert (comme login) -->
 <script>
-    alert({{ error|tojson }});
+    alert({{error | tojson}});
 </script>
 
 <script>
-    // On garde juste cette fonction utile pour le visuel du formulaire
     function toggleField(type) {
         const label = document.getElementById('label_ecole');
         const input = document.getElementById('ecole');

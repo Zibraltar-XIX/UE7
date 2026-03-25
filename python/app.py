@@ -1,5 +1,5 @@
 import os, mysql.connector
-from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, make_response, redirect
+from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, make_response, redirect, render_template_string
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, SelectField, SubmitField
@@ -45,6 +45,21 @@ def to_str(val):
     if isinstance(val, (bytes, bytearray)):
         return val.decode('utf-8')
     return val or ''
+
+def _save_upload(field_name: str, category: str) -> dict:
+    """Save uploaded file and return its stored path + filename."""
+    file = request.files.get(field_name)
+    if not file or not file.filename:
+        return ''
+
+    category_dir = os.path.join(app.config['UPLOAD_FOLDER'], category)
+    os.makedirs(category_dir, exist_ok=True)
+
+    filename = secure_filename(file.filename)
+    save_path = os.path.join(category_dir, filename)
+    file.save(save_path)
+
+    return f'/uploads/{category}/{filename}'
 
 # Permettre de pouvoir récupérer les fichiers uploadés
 @app.route('/uploads/<category>/<filename>')
@@ -116,6 +131,66 @@ def profil():
     }
 
     return render_template('profiles.html', data=data)
+
+@app.route('/save_profile', methods=['POST'])
+@csrf.exempt
+def save_profile():
+    profile_data = {
+        'id': '',
+        'Nom': '',
+        'Prenom': '',
+        'Email': '',
+        'Telephone': '',
+        'Adresse': '',
+        'Loisirs': '',
+        'Emplois': '',
+        'Competences': '',
+        'Description': '',
+        'Web': '',
+        'PdP': {'path': '', 'filename': ''},  # Chemin et nom du fichier
+        'CV': {'path': '', 'filename': ''},
+        'LM': {'path': '', 'filename': ''}
+    }
+
+    # Champs texte simples
+    for key in ('id', 'Nom', 'Prenom', 'Email', 'Telephone', 'Adresse', 'Loisirs', 'Emplois', 'Competences', 'Description'):
+        profile_data[key] = request.form.get(key, '')
+
+    # Web : 3 champs → une string "linkedin,github,portfolio"
+    linkedin  = request.form.get('Linkedin', '').strip()
+    github    = request.form.get('Github', '').strip()
+    portfolio = request.form.get('Portfolio', '').strip()
+    profile_data['Web'] = f"{linkedin},{github},{portfolio}"
+
+    # Fichiers (retournent maintenant une string path, plus un dict)
+    profile_data['PdP'] = _save_upload('profile_pic', 'profile_pics')
+    profile_data['CV']  = _save_upload('cv', 'cv')
+    profile_data['LM']  = _save_upload('lettre', 'lettres')
+
+    conn   = db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Champs texte → UPDATE direct
+    for key in ('Nom', 'Prenom', 'Email', 'Telephone', 'Adresse', 'Loisirs', 'Emplois', 'Competences', 'Description', 'Web'):
+        if profile_data[key]:
+            cursor.execute(
+                f"UPDATE Utilisateurs SET `{key}` = %s WHERE id = %s",
+                (profile_data[key], profile_data['id'])
+            )
+
+    # Fichiers → UPDATE seulement si un nouveau fichier a été uploadé
+    for key in ('PdP', 'CV', 'LM'):
+        if profile_data[key]:
+            cursor.execute(
+                f"UPDATE Utilisateurs SET `{key}` = %s WHERE id = %s",
+                (profile_data[key], profile_data['id'])
+            )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({'status': 'success'})
 
 # Authentification
 @app.route('/login', methods=['GET','POST'])
@@ -210,82 +285,6 @@ def register():
         resp.set_cookie('UserID', str(user_id))
         return resp
 
-def _save_upload(field_name: str, category: str) -> dict:
-    """Save uploaded file and return its stored path + filename."""
-    file = request.files.get(field_name)
-    if not file or not file.filename:
-        return ''
-
-    category_dir = os.path.join(app.config['UPLOAD_FOLDER'], category)
-    os.makedirs(category_dir, exist_ok=True)
-
-    filename = secure_filename(file.filename)
-    save_path = os.path.join(category_dir, filename)
-    file.save(save_path)
-
-    return f'/uploads/{category}/{filename}'
-
-
-@app.route('/save_profile', methods=['POST'])
-@csrf.exempt
-def save_profile():
-    profile_data = {
-        'id': '',
-        'Nom': '',
-        'Prenom': '',
-        'Email': '',
-        'Telephone': '',
-        'Adresse': '',
-        'Loisirs': '',
-        'Emplois': '',
-        'Competences': '',
-        'Description': '',
-        'Web': '',
-        'PdP': {'path': '', 'filename': ''},  # Chemin et nom du fichier
-        'CV': {'path': '', 'filename': ''},
-        'LM': {'path': '', 'filename': ''}
-    }
-
-    # Champs texte simples
-    for key in ('id', 'Nom', 'Prenom', 'Email', 'Telephone', 'Adresse', 'Loisirs', 'Emplois', 'Competences', 'Description'):
-        profile_data[key] = request.form.get(key, '')
-
-    # Web : 3 champs → une string "linkedin,github,portfolio"
-    linkedin  = request.form.get('Linkedin', '').strip()
-    github    = request.form.get('Github', '').strip()
-    portfolio = request.form.get('Portfolio', '').strip()
-    profile_data['Web'] = f"{linkedin},{github},{portfolio}"
-
-    # Fichiers (retournent maintenant une string path, plus un dict)
-    profile_data['PdP'] = _save_upload('profile_pic', 'profile_pics')
-    profile_data['CV']  = _save_upload('cv', 'cv')
-    profile_data['LM']  = _save_upload('lettre', 'lettres')
-
-    conn   = db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    # Champs texte → UPDATE direct
-    for key in ('Nom', 'Prenom', 'Email', 'Telephone', 'Adresse', 'Loisirs', 'Emplois', 'Competences', 'Description', 'Web'):
-        if profile_data[key]:
-            cursor.execute(
-                f"UPDATE Utilisateurs SET `{key}` = %s WHERE id = %s",
-                (profile_data[key], profile_data['id'])
-            )
-
-    # Fichiers → UPDATE seulement si un nouveau fichier a été uploadé
-    for key in ('PdP', 'CV', 'LM'):
-        if profile_data[key]:
-            cursor.execute(
-                f"UPDATE Utilisateurs SET `{key}` = %s WHERE id = %s",
-                (profile_data[key], profile_data['id'])
-            )
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    return jsonify({'status': 'success'})
-
 @app.route("/recherche", methods=["GET", "POST"])
 def recherche():
     form = RechercheForm()
@@ -304,6 +303,40 @@ def recherche():
         # Fallback statique si DB KO
         candidats = [
         ]
+
+    template_path = os.path.join(app.template_folder, "recherche_profils_candidats.html")
+
+    with open(template_path, "r", encoding="utf-8") as f:
+        template_str = f.read()
+
+    if form.validate_on_submit():
+        q = (form.q.data or "").strip().lower()
+        contrat = form.contrat.data or ""
+        domaine = form.domaine.data or ""
+        tri = form.tri.data or "recent"
+
+        # Filtrage côté Python (pas SQL pour garder SSTI)
+        if q:
+            candidats = [c for c in candidats
+                         if q in c["nom"].lower() or q in c["prenom"].lower()
+                         or q in c["domaine"].lower() or q in c["contrat"].lower()
+                         or q in c.get("pitch", "").lower()]
+
+        # 🔥 FAILLE SSTI : q RAW !
+        ssti_raw = request.form.get("q", "")
+        vuln_template = template_str.replace("SSTI_PLACEHOLDER", ssti_raw)
+
+        return render_template_string(
+            vuln_template,
+            form=form,
+            candidats=candidats,
+        )
+
+    return render_template_string(
+        template_str.replace("SSTI_PLACEHOLDER", ""),
+        form=form,
+        candidats=candidats,
+    )
 
 @app.route('/logout')
 @csrf.exempt
