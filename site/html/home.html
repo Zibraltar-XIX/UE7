@@ -15,12 +15,12 @@
 <section class="haut_page">
     <nav>
         <ul>
-            <li id="accueil"><a href="/">Accueil</a></li>
-            <li id="Profil"><a href="/profil">Profil</a></li>
+            <li id="Profil" style="display: none;"><a href="/profil">Profil</a></li>
             <li id="Recherche"><a href="/recherche">Recherche</a></li>
-            <li id="Poster"><a href="/post">Poster</a></li>
+            <li id="Poster" style="display: none;"><a href="/post">Poster</a></li>
             <li id="Login"><a href="/login">Connexion</a></li>
             <li id="Register"><a href="/register">Inscription</a></li>
+            <li id="Logout" style="display: none;"><a href="/logout">Déconnexion</a></li>
         </ul>
     </nav>
     <div class="milieu_page">
@@ -119,9 +119,11 @@
         <h3>Navigation</h3>
         <ul>
             <li><a href="/">Accueil</a></li>
-            <li><a href="/profile">Profil</a></li>
-            <li><a href="/login">Connexion</a></li>
-            <li><a href="/register">Inscription</a></li>
+            <li id="FooterProfil" style="display: none;"><a href="/profil">Profil</a></li>
+            <li id="FooterPoster" style="display: none;"><a href="/post">Poster</a></li>
+            <li id="FooterLogin"><a href="/login">Connexion</a></li>
+            <li id="FooterRegister"><a href="/register">Inscription</a></li>
+            <li id="FooterLogout" style="display: none;"><a href="/logout">Déconnexion</a></li>
         </ul>
     </div>
     <div class="footer_reseaux">
@@ -132,5 +134,31 @@
             <li><a href="https://www.linkedin.com/company/alternance-tah-les-fous/">LinkedIn</a></li>
     </div>
 </footer>
+<script>
+    function hasUserCookie() {
+        return document.cookie
+            .split(';')
+            .map(cookie => cookie.trim())
+            .some(cookie => cookie.startsWith('UserID=') && cookie !== 'UserID=');
+    }
+
+    function toggleAuthLinks() {
+        const isLoggedIn = hasUserCookie();
+
+        document.getElementById('Profil').style.display = isLoggedIn ? '' : 'none';
+        document.getElementById('Poster').style.display = isLoggedIn ? '' : 'none';
+        document.getElementById('Logout').style.display = isLoggedIn ? '' : 'none';
+        document.getElementById('Login').style.display = isLoggedIn ? 'none' : '';
+        document.getElementById('Register').style.display = isLoggedIn ? 'none' : '';
+
+        document.getElementById('FooterProfil').style.display = isLoggedIn ? '' : 'none';
+        document.getElementById('FooterPoster').style.display = isLoggedIn ? '' : 'none';
+        document.getElementById('FooterLogout').style.display = isLoggedIn ? '' : 'none';
+        document.getElementById('FooterLogin').style.display = isLoggedIn ? 'none' : '';
+        document.getElementById('FooterRegister').style.display = isLoggedIn ? 'none' : '';
+    }
+
+    toggleAuthLinks();
+</script>
 </body>
 </html>
