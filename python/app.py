@@ -127,6 +127,9 @@ def profil():
         emplois = request.form.get('Emplois', '').strip()
         competences = request.form.get('Competences', '').strip()
         description = request.form.get('Description', '').strip()
+        pdp = _save_upload('profile_pic', 'profile_pics')
+        cv = _save_upload('cv', 'cv')
+        lm = _save_upload('lettre', 'lettres')
 
         cursor.close()
         cursor = conn.cursor()
@@ -165,6 +168,16 @@ def profil():
                 user_id
             )
         )
+
+        if pdp:
+            cursor.execute("UPDATE Utilisateurs SET PdP = %s WHERE id = %s", (pdp, user_id))
+
+        if cv:
+            cursor.execute("UPDATE Utilisateurs SET CV = %s WHERE id = %s", (cv, user_id))
+
+        if lm:
+            cursor.execute("UPDATE Utilisateurs SET LM = %s WHERE id = %s", (lm, user_id))
+
         conn.commit()
         cursor.close()
         conn.close()

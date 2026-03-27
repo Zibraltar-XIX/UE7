@@ -108,7 +108,20 @@
                     <div class="section_documents">
                         <div class="documents_modif">
                             <h2>DOCUMENTS</h2>
-                            <p class="documents_note">Les fichiers ne sont pas geres pour le moment.</p>
+                            <div class="row">
+                                <span>CV :</span>
+                                <div class="file-input">
+                                    <input type="file" id="cv">
+                                    <button type="button" onclick="viewFile('cv', '{{ data.CV or '' }}')">Voir</button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <span>Lettre de motivation :</span>
+                                <div class="file-input">
+                                    <input type="file" id="lettre">
+                                    <button type="button" onclick="viewFile('lettre', '{{ data.LM or '' }}')">Voir</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -152,6 +165,7 @@
             editables.forEach(el => {
                 const input = document.createElement('input');
                 input.type = 'text';
+                input.id = el.id;
                 input.value = el.innerText;
                 input.className = 'edit-input';
                 input.dataset.originalId = el.id;
@@ -162,7 +176,7 @@
             const inputs = container.querySelectorAll('input.edit-input');
             inputs.forEach(input => {
                 const span = document.createElement('span');
-                span.id = input.dataset.originalId;
+                span.id = input.dataset.originalId || input.id;
                 span.className = 'editable';
                 span.innerText = input.value || '';
                 input.replaceWith(span);
@@ -171,12 +185,25 @@
         }
     }
 
+    function viewFile(inputId, savedPath) {
+        const fileInput = document.getElementById(inputId);
+        const file = fileInput.files[0];
+
+        if (file) {
+            window.open(URL.createObjectURL(file), '_blank');
+        } else if (savedPath) {
+            window.open(savedPath, '_blank');
+        } else {
+            alert('Aucun fichier selectionne.');
+        }
+    }
+
     async function saveProfile() {
         const formData = new FormData();
         const fieldIds = ['Nom', 'Prenom', 'Email', 'Telephone', 'Role', 'Adresse', 'Loisirs', 'Emplois', 'Competences', 'Description', 'Web', 'Linkedin', 'Github', 'Portfolio'];
 
         fieldIds.forEach(id => {
-            const el = document.getElementById(id);
+            const el = document.getElementById(id) || document.querySelector(`[data-original-id="${id}"]`);
             if (el) {
                 if (el.tagName === 'INPUT') {
                     formData.append(id, el.value);
@@ -185,6 +212,21 @@
                 }
             }
         });
+
+        const profilePic = document.getElementById('profile-pic-input').files[0];
+        if (profilePic) {
+            formData.append('profile_pic', profilePic);
+        }
+
+        const cv = document.getElementById('cv').files[0];
+        if (cv) {
+            formData.append('cv', cv);
+        }
+
+        const lettre = document.getElementById('lettre').files[0];
+        if (lettre) {
+            formData.append('lettre', lettre);
+        }
 
         try {
             const response = await fetch('/profil', {method: 'POST', body: formData});
