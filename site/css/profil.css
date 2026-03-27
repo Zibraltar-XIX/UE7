@@ -26,6 +26,7 @@ input:focus{
 }
 
 .editable{
+    display: block;
     max-width: 90%;
     border-bottom: 1px solid rgb(74, 189, 238);
 }
@@ -62,11 +63,21 @@ input:focus{
 
 .box_profil {
     position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
     width: 20rem;
+    padding: 1.5rem;
     border: 2pt solid rgb(74, 189, 238);
     background-color: white;
     border-radius: 2rem;
     box-shadow: 1px 1px 15px 3px rgba(162, 162, 162, 0.541);
+    box-sizing: border-box;
+}
+
+.box_profil img {
+    background-color: #f4faff;
 }
 
 .box_milieu_principale {
@@ -158,6 +169,17 @@ input:focus{
     padding: 1em 0.5em 2em 2em;
     width: 80vh;
     box-shadow: 1px 1px 7px 3px rgba(162, 162, 162, 0.541);
+}
+
+.documents_note {
+    margin: 0;
+    padding: 1rem;
+    border-radius: 1rem;
+    background-color: rgb(240, 249, 255);
+}
+
+button {
+    cursor: pointer;
 }
 
 .description_modif i{

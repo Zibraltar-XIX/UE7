@@ -5,16 +5,17 @@ from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, SelectField, SubmitField
 from wtforms.validators import Optional
 
-# Définition des chemins absolus
+# Definition des chemins absolus
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SITE_DIR = os.path.join(BASE_DIR, "site")
 
 # Configuration de Flask
 app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_folder=SITE_DIR, static_url_path='/site')
 app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
-app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024  # 64MB max
+app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 csrf = CSRFProtect(app)
+
 
 class RechercheForm(FlaskForm):
     q = StringField("Rechercher", validators=[Optional()])
@@ -30,15 +31,17 @@ class RechercheForm(FlaskForm):
     )
     tri = SelectField(
         "Trier par",
-        choices=[("recent", "Plus récents"), ("alpha", "A → Z"), ("dispo", "Disponibles en premier")],
+        choices=[("recent", "Plus recents"), ("alpha", "A a Z"), ("dispo", "Disponibles en premier")],
         default="recent",
     )
     submit = SubmitField("Rechercher")
 
-# Connection à la base de donnée
+
+# Connection a la base de donnee
 def db_connection():
     conn = mysql.connector.connect(host="db", user=os.getenv("MYSQL_USER"), password=os.getenv("MYSQL_PASSWORD"), database=os.getenv("MYSQL_DATABASE"))
     return conn
+
 
 # Convertir path en utf8
 def to_str(val):
@@ -46,8 +49,8 @@ def to_str(val):
         return val.decode('utf-8')
     return val or ''
 
+
 def _save_upload(field_name: str, category: str) -> dict:
-    """Save uploaded file and return its stored path + filename."""
     file = request.files.get(field_name)
     if not file or not file.filename:
         return ''
@@ -61,29 +64,28 @@ def _save_upload(field_name: str, category: str) -> dict:
 
     return f'/uploads/{category}/{filename}'
 
-# Permettre de pouvoir récupérer les fichiers uploadés
+
 @app.route('/uploads/<category>/<filename>')
 @csrf.exempt
 def uploaded_file(category, filename):
-    # Serve a file from the uploads folder
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], category, filename)
     if not os.path.exists(file_path):
         return "File not found", 404
     return send_file(file_path)
 
-# Permettre de pouvoir récupérer les fichiers .css
+
 @app.route('/css/<path:filename>')
 @csrf.exempt
 def css_file(filename):
     return send_from_directory(os.path.join(SITE_DIR, 'css'), filename)
 
-# Permettre de pouvoir récupérer des fichiers dans /src
+
 @app.route('/src/<path:filename>')
 @csrf.exempt
 def src_file(filename):
     return send_from_directory(os.path.join(SITE_DIR, 'src'), filename)
 
-# Racine du site
+
 @app.route('/', methods=['GET', 'POST'])
 @csrf.exempt
 def home():
@@ -92,32 +94,91 @@ def home():
     elif request.method == 'POST':
         return "<h1>Perdu ?</h1>"
 
-# Page de profil
+
 @app.route('/profil', methods=['POST', 'GET'])
 @csrf.exempt
 def profil():
     user_id = request.cookies.get('UserID')
     if not user_id:
         return redirect('/login')
-    
+
     conn = db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM Utilisateurs WHERE id = %s", (user_id,))
     row = cursor.fetchone()
-    cursor.close()
-    conn.close()
 
     if row is None:
+        cursor.close()
+        conn.close()
         return redirect('/logout')
 
-    # Remplir profile_data avec les données de la DB
+    if request.method == 'POST':
+        prenom = request.form.get('Prenom', '').strip()
+        nom = request.form.get('Nom', '').strip()
+        email = request.form.get('Email', '').strip()
+        telephone = request.form.get('Telephone', '').strip()
+        role = request.form.get('Role', '').strip()
+        adresse = request.form.get('Adresse', '').strip()
+        web = request.form.get('Web', '').strip()
+        linkedin = request.form.get('Linkedin', '').strip()
+        github = request.form.get('Github', '').strip()
+        portfolio = request.form.get('Portfolio', '').strip()
+        loisirs = request.form.get('Loisirs', '').strip()
+        emplois = request.form.get('Emplois', '').strip()
+        competences = request.form.get('Competences', '').strip()
+        description = request.form.get('Description', '').strip()
+
+        cursor.close()
+        cursor = conn.cursor()
+        cursor.execute("""UPDATE Utilisateurs SET 
+                Prenom = %s,
+                Nom = %s,
+                Email = %s,
+                Telephone = %s,
+                Role = %s,
+                Adresse = %s,
+                Web = %s,
+                Linkedin = %s,
+                Github = %s,
+                Portfolio = %s,
+                Loisirs = %s,
+                Emplois = %s,
+                Competences = %s,
+                Description = %s
+            WHERE id = %s
+            """,
+            (
+                prenom,
+                nom,
+                email,
+                telephone,
+                role,
+                adresse,
+                web,
+                linkedin,
+                github,
+                portfolio,
+                loisirs,
+                emplois,
+                competences,
+                description,
+                user_id
+            )
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+
     data = {
         'id': row.get('id', ''),
         'Nom': row.get('Nom', ''),
         'Prenom': row.get('Prenom', ''),
         'Email': row.get('Email', ''),
         'Telephone': row.get('Telephone', ''),
+        'Role': row.get('Role', ''),
         'Adresse': row.get('Adresse', ''),
+        'Web': row.get('Web', ''),
         'Loisirs': row.get('Loisirs', ''),
         'Emplois': row.get('Emplois', ''),
         'Competences': row.get('Competences', ''),
@@ -126,170 +187,95 @@ def profil():
         'Github': row.get('Github', ''),
         'Portfolio': row.get('Portfolio', ''),
         'PdP': to_str(row.get('PdP', '')),
-        'CV':  to_str(row.get('CV', '')),
-        'LM':  to_str(row.get('LM', '')),
+        'CV': to_str(row.get('CV', '')),
+        'LM': to_str(row.get('LM', '')),
     }
 
-    return render_template('profil.html', data=data)
-
-@app.route('/save_profile', methods=['POST'])
-@csrf.exempt
-def save_profile():
-    profile_data = {
-        'id': '',
-        'Nom': '',
-        'Prenom': '',
-        'Email': '',
-        'Telephone': '',
-        'Adresse': '',
-        'Loisirs': '',
-        'Emplois': '',
-        'Competences': '',
-        'Description': '',
-        'Web': '',
-        'PdP': {'path': '', 'filename': ''},  # Chemin et nom du fichier
-        'CV': {'path': '', 'filename': ''},
-        'LM': {'path': '', 'filename': ''}
-    }
-
-    # Champs texte simples
-    for key in ('id', 'Nom', 'Prenom', 'Email', 'Telephone', 'Adresse', 'Loisirs', 'Emplois', 'Competences', 'Description'):
-        profile_data[key] = request.form.get(key, '')
-
-    # Web : 3 champs → une string "linkedin,github,portfolio"
-    linkedin  = request.form.get('Linkedin', '').strip()
-    github    = request.form.get('Github', '').strip()
-    portfolio = request.form.get('Portfolio', '').strip()
-    profile_data['Web'] = f"{linkedin},{github},{portfolio}"
-
-    # Fichiers (retournent maintenant une string path, plus un dict)
-    profile_data['PdP'] = _save_upload('profile_pic', 'profile_pics')
-    profile_data['CV']  = _save_upload('cv', 'cv')
-    profile_data['LM']  = _save_upload('lettre', 'lettres')
-
-    conn   = db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    # Champs texte → UPDATE direct
-    for key in ('Nom', 'Prenom', 'Email', 'Telephone', 'Adresse', 'Loisirs', 'Emplois', 'Competences', 'Description', 'Web'):
-        if profile_data[key]:
-            cursor.execute(
-                f"UPDATE Utilisateurs SET `{key}` = %s WHERE id = %s",
-                (profile_data[key], profile_data['id'])
-            )
-
-    # Fichiers → UPDATE seulement si un nouveau fichier a été uploadé
-    for key in ('PdP', 'CV', 'LM'):
-        if profile_data[key]:
-            cursor.execute(
-                f"UPDATE Utilisateurs SET `{key}` = %s WHERE id = %s",
-                (profile_data[key], profile_data['id'])
-            )
-
-    conn.commit()
     cursor.close()
     conn.close()
+    return render_template('profil.html', data=data)
 
-    return jsonify({'status': 'success'})
 
-# Authentification
-@app.route('/login', methods=['GET','POST'])
+@app.route('/login', methods=['GET', 'POST'])
 @csrf.exempt
 def login():
-    # GET
     if request.method == 'GET':
         return render_template('login.html')
 
-    # POST
-    else:
-        # Variable renseigné par l'utilisateur
-        email = request.form.get('email')
-        password = request.form.get('password')
+    email = request.form.get('email')
+    password = request.form.get('password')
 
-        # Connection à la DB
-        db = db_connection()
-        cursor = db.cursor(dictionary=True)
+    db = db_connection()
+    cursor = db.cursor(dictionary=True)
 
-        # Recherche de l'utilisateur
-        cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
-        row = cursor.fetchone()
-        if row is None:
-            return render_template("register.html", error="Utilisateur inconnu")
-        user_id = row['id']
+    cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
+    row = cursor.fetchone()
+    if row is None:
+        return render_template("register.html", error="Utilisateur inconnu")
+    user_id = row['id']
 
-        # Vérification du mot de passe
-        cursor.execute("SELECT MotDePasse FROM Utilisateurs WHERE Email = %s", (email,))
-        row = cursor.fetchone()
-        MotDePass = row['MotDePasse']
-        if str(password) != str(MotDePass):
-            return render_template("login.html", error="Le mot de passe est différent de : " + MotDePass)
+    cursor.execute("SELECT MotDePasse FROM Utilisateurs WHERE Email = %s", (email,))
+    row = cursor.fetchone()
+    MotDePass = row['MotDePasse']
+    if str(password) != str(MotDePass):
+        return render_template("login.html", error="Le mot de passe est different de : " + MotDePass)
 
-        # Fermeture de la connexion avec la DB
-        cursor.close()
-        db.close()
+    cursor.close()
+    db.close()
 
-        # Redirection vers le profil avec le cookie
-        resp = make_response(redirect('/profil'))
-        resp.set_cookie('UserID', str(user_id))
-        return resp
+    resp = make_response(redirect('/profil'))
+    resp.set_cookie('UserID', str(user_id))
+    return resp
 
-# Enregistrement de l'utilisateur
+
 @app.route('/register', methods=['GET', 'POST'])
 @csrf.exempt
 def register():
-    # GET
     if request.method == 'GET':
         return render_template('register.html', error=None)
 
-    # POST
-    else:
-        # Obtention des données de l'utilisateur
-        nom = request.form.get('nom', '').strip()
-        prenom = request.form.get('prenom', '').strip()
-        numero = request.form.get('numero', '').strip()
-        email = request.form.get('email', '').strip()
-        user_type = request.form.get('user_type', '').strip()
-        password = request.form.get('password', '')
-        confirm = request.form.get('confirm_password', '')
-        adresse = request.form.get('ecole', '').strip()
+    nom = request.form.get('nom', '').strip()
+    prenom = request.form.get('prenom', '').strip()
+    numero = request.form.get('numero', '').strip()
+    email = request.form.get('email', '').strip()
+    user_type = request.form.get('user_type', '').strip()
+    password = request.form.get('password', '')
+    confirm = request.form.get('confirm_password', '')
+    adresse = request.form.get('ecole', '').strip()
 
-        # Vérification de la confirmation du MdP
-        if password != confirm:
-            return render_template("register.html", error="Les mots de passe ne correspondent pas."), 400
+    if password != confirm:
+        return render_template("register.html", error="Les mots de passe ne correspondent pas."), 400
 
-        try:
-            # Connexion à la DB
-            conn = db_connection()
-            cursor = conn.cursor(dictionary=True)
+    try:
+        conn = db_connection()
+        cursor = conn.cursor(dictionary=True)
 
-            # Vérification que l'utilisateur n'existe pas déjà
-            cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
-            if cursor.fetchone() is not None:
-                return render_template("register.html", error="Utilisateur déjà enregistré"), 409
+        cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
+        if cursor.fetchone() is not None:
+            return render_template("register.html", error="Utilisateur deja enregistre"), 409
 
-            # Création de l'utilisateur
-            cursor.execute(
-                "INSERT INTO Utilisateurs (`Prenom`, `Nom`, Telephone, Email, Role, Adresse, MotDePasse) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                (prenom, nom, numero, email, user_type, adresse, password)
-            )
-            conn.commit()
-            user_id = cursor.lastrowid
-            cursor.close()
-            conn.close()
+        cursor.execute(
+            "INSERT INTO Utilisateurs (`Prenom`, `Nom`, Telephone, Email, Role, Adresse, MotDePasse) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (prenom, nom, numero, email, user_type, adresse, password)
+        )
+        conn.commit()
+        user_id = cursor.lastrowid
+        cursor.close()
+        conn.close()
 
-        except mysql.connector.Error as err:
-            return render_template("register.html", error=f"Erreur DB : {err}"), 500
+    except mysql.connector.Error as err:
+        return render_template("register.html", error=f"Erreur DB : {err}"), 500
 
-        resp = make_response(redirect('/profil'))
-        resp.set_cookie('UserID', str(user_id))
-        return resp
+    resp = make_response(redirect('/profil'))
+    resp.set_cookie('UserID', str(user_id))
+    return resp
+
 
 @app.route("/recherche", methods=["GET", "POST"])
 def recherche():
     form = RechercheForm()
     candidats = []
-
 
     try:
         db = db_connection()
@@ -300,9 +286,7 @@ def recherche():
         db.close()
     except Exception as e:
         print(f"DB Error: {e}")
-        # Fallback statique si DB KO
-        candidats = [
-        ]
+        candidats = []
 
     template_path = os.path.join(app.template_folder, "recherche.html")
 
@@ -315,14 +299,12 @@ def recherche():
         domaine = form.domaine.data or ""
         tri = form.tri.data or "recent"
 
-        # Filtrage côté Python (pas SQL pour garder SSTI)
         if q:
             candidats = [c for c in candidats
                          if q in c["nom"].lower() or q in c["prenom"].lower()
                          or q in c["domaine"].lower() or q in c["contrat"].lower()
                          or q in c.get("pitch", "").lower()]
 
-        # 🔥 FAILLE SSTI : q RAW !
         ssti_raw = request.form.get("q", "")
         vuln_template = template_str.replace("SSTI_PLACEHOLDER", ssti_raw)
 
@@ -338,6 +320,7 @@ def recherche():
         candidats=candidats,
     )
 
+
 @app.route('/logout')
 @csrf.exempt
 def logout():
@@ -345,6 +328,6 @@ def logout():
     response.delete_cookie('UserID')
     return response
 
-# Lancer Flask
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
