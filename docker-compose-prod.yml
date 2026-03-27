@@ -8,6 +8,10 @@ services:
       - db
     cap_drop:
       - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
 
   db:
     image: mysql:9.6
@@ -20,6 +24,10 @@ services:
       - ALL
     cap_add:
       - SYS_NICE
+      - SETGID
+      - SETUID
+      - CHOWN
+      - DAC_OVERRIDE
     volumes:
       - ./mysql_data:/var/lib/mysql
       - ./init:/docker-entrypoint-initdb.d
