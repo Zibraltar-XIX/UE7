@@ -1,5 +1,7 @@
 import os, uuid, mysql.connector
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, redirect, render_template_string, session
+from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, SelectField, SubmitField
@@ -37,6 +39,12 @@ UPLOAD_ERROR_MESSAGES = {
     "lettre": "La lettre de motivation doit etre au format PDF.",
 }
 
+LOGIN_ERROR_MESSAGE = "Identifiant ou mot de passe incorrect."
+LOCKOUT_ERROR_MESSAGE = "Trop de tentatives de connexion. Reessaie plus tard."
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_DURATION = timedelta(minutes=15)
+FAILED_LOGIN_ATTEMPTS = {}
+
 
 class RechercheForm(FlaskForm):
     q = StringField("Rechercher", validators=[Optional()])
@@ -69,6 +77,74 @@ def to_str(val):
     if isinstance(val, (bytes, bytearray)):
         return val.decode('utf-8')
     return val or ''
+
+
+def _normalize_email(email: str) -> str:
+    return (email or "").strip().lower()
+
+
+def _is_password_hash(password_value: str) -> bool:
+    return isinstance(password_value, str) and password_value.startswith(("scrypt:", "pbkdf2:"))
+
+
+def _verify_password(stored_password: str, candidate_password: str):
+    if not stored_password or candidate_password is None:
+        return False, None
+
+    if _is_password_hash(stored_password):
+        return check_password_hash(stored_password, candidate_password), None
+
+    is_valid = candidate_password == stored_password
+    if not is_valid:
+        return False, None
+
+    return True, generate_password_hash(candidate_password)
+
+
+def _clear_failed_login_attempts(identifier: str) -> None:
+    if identifier:
+        FAILED_LOGIN_ATTEMPTS.pop(identifier, None)
+
+
+def _is_login_locked(identifier: str) -> bool:
+    if not identifier:
+        return False
+
+    attempt_state = FAILED_LOGIN_ATTEMPTS.get(identifier)
+    if not attempt_state:
+        return False
+
+    now = datetime.utcnow()
+    locked_until = attempt_state.get("locked_until")
+    last_failure = attempt_state.get("last_failure")
+
+    if locked_until and locked_until > now:
+        return True
+
+    if locked_until or (last_failure and now - last_failure > LOCKOUT_DURATION):
+        FAILED_LOGIN_ATTEMPTS.pop(identifier, None)
+
+    return False
+
+
+def _record_failed_login(identifier: str) -> bool:
+    if not identifier:
+        return False
+
+    now = datetime.utcnow()
+    attempt_state = FAILED_LOGIN_ATTEMPTS.get(identifier)
+
+    if not attempt_state or now - attempt_state["last_failure"] > LOCKOUT_DURATION:
+        attempt_state = {"count": 0, "last_failure": now, "locked_until": None}
+
+    attempt_state["count"] += 1
+    attempt_state["last_failure"] = now
+
+    if attempt_state["count"] >= MAX_LOGIN_ATTEMPTS:
+        attempt_state["locked_until"] = now + LOCKOUT_DURATION
+
+    FAILED_LOGIN_ATTEMPTS[identifier] = attempt_state
+    return bool(attempt_state["locked_until"] and attempt_state["locked_until"] > now)
 
 
 def _save_upload(field_name: str, category: str) -> dict:
@@ -248,29 +324,43 @@ def login():
     if request.method == 'GET':
         return render_template('login.html')
 
-    email = request.form.get('email')
-    password = request.form.get('password')
+    email = _normalize_email(request.form.get('email'))
+    password = request.form.get('password', '')
+    login_identifier = email or (request.remote_addr or "anonymous")
+
+    if _is_login_locked(login_identifier):
+        return render_template("login.html", error=LOCKOUT_ERROR_MESSAGE), 429
 
     db = db_connection()
     cursor = db.cursor(dictionary=True)
 
-    cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
+    cursor.execute("SELECT id, MotDePasse FROM Utilisateurs WHERE Email = %s", (email,))
     row = cursor.fetchone()
     if row is None:
-        return render_template("register.html", error="Utilisateur inconnu")
-    user_id = row['id']
+        is_now_locked = _record_failed_login(login_identifier)
+        cursor.close()
+        db.close()
+        error_message = LOCKOUT_ERROR_MESSAGE if is_now_locked else LOGIN_ERROR_MESSAGE
+        return render_template("login.html", error=error_message), 401
 
-    cursor.execute("SELECT MotDePasse FROM Utilisateurs WHERE Email = %s", (email,))
-    row = cursor.fetchone()
-    MotDePass = row['MotDePasse']
-    if str(password) != str(MotDePass):
-        return render_template("login.html", error="Le mot de passe est different de : " + MotDePass)
+    is_valid_password, upgraded_password_hash = _verify_password(row.get('MotDePasse'), password)
+    if not is_valid_password:
+        is_now_locked = _record_failed_login(login_identifier)
+        cursor.close()
+        db.close()
+        error_message = LOCKOUT_ERROR_MESSAGE if is_now_locked else LOGIN_ERROR_MESSAGE
+        return render_template("login.html", error=error_message), 401
+
+    if upgraded_password_hash:
+        cursor.execute("UPDATE Utilisateurs SET MotDePasse = %s WHERE id = %s", (upgraded_password_hash, row['id']))
+        db.commit()
 
     cursor.close()
     db.close()
 
+    _clear_failed_login_attempts(login_identifier)
     session.clear()
-    session['user_id'] = user_id
+    session['user_id'] = row['id']
     return redirect('/profil')
 
 
@@ -283,7 +373,7 @@ def register():
     nom = request.form.get('nom', '').strip()
     prenom = request.form.get('prenom', '').strip()
     numero = request.form.get('numero', '').strip()
-    email = request.form.get('email', '').strip()
+    email = _normalize_email(request.form.get('email'))
     user_type = request.form.get('user_type', '').strip()
     password = request.form.get('password', '')
     confirm = request.form.get('confirm_password', '')
@@ -303,7 +393,7 @@ def register():
         cursor.execute(
             "INSERT INTO Utilisateurs (`Prenom`, `Nom`, Telephone, Email, Role, Adresse, MotDePasse) "
             "VALUES (%s, %s, %s, %s, %s, %s, %s)",
-            (prenom, nom, numero, email, user_type, adresse, password)
+            (prenom, nom, numero, email, user_type, adresse, generate_password_hash(password))
         )
         conn.commit()
         user_id = cursor.lastrowid
