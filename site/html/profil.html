@@ -236,7 +236,7 @@
                 alert('Profil mis a jour avec succes !');
                 location.reload();
             } else {
-                alert('Erreur lors de la sauvegarde.');
+                alert(result.message || 'Erreur lors de la sauvegarde.');
             }
         } catch (error) {
             console.error('Erreur:', error);

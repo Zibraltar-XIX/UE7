@@ -1,4 +1,4 @@
-import os, mysql.connector
+import os, uuid, mysql.connector
 from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, redirect, render_template_string, session
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm, CSRFProtect
@@ -23,6 +23,19 @@ csrf = CSRFProtect(app)
 @app.context_processor
 def inject_auth_state():
     return {"is_logged_in": bool(session.get("user_id"))}
+
+
+ALLOWED_UPLOAD_EXTENSIONS = {
+    "profile_pic": {"jpg", "jpeg", "png", "webp"},
+    "cv": {"pdf"},
+    "lettre": {"pdf"},
+}
+
+UPLOAD_ERROR_MESSAGES = {
+    "profile_pic": "La photo de profil doit etre au format JPG, JPEG, PNG ou WEBP.",
+    "cv": "Le CV doit etre au format PDF.",
+    "lettre": "La lettre de motivation doit etre au format PDF.",
+}
 
 
 class RechercheForm(FlaskForm):
@@ -66,7 +79,14 @@ def _save_upload(field_name: str, category: str) -> dict:
     category_dir = os.path.join(app.config['UPLOAD_FOLDER'], category)
     os.makedirs(category_dir, exist_ok=True)
 
-    filename = secure_filename(file.filename)
+    original_filename = secure_filename(file.filename)
+    _, extension = os.path.splitext(original_filename)
+    extension = extension.lower().lstrip('.')
+
+    if extension not in ALLOWED_UPLOAD_EXTENSIONS.get(field_name, set()):
+        raise ValueError(UPLOAD_ERROR_MESSAGES.get(field_name, "Type de fichier non autorise."))
+
+    filename = f"{uuid.uuid4().hex}.{extension}"
     save_path = os.path.join(category_dir, filename)
     file.save(save_path)
 
@@ -135,9 +155,14 @@ def profil():
         emplois = request.form.get('Emplois', '').strip()
         competences = request.form.get('Competences', '').strip()
         description = request.form.get('Description', '').strip()
-        pdp = _save_upload('profile_pic', 'profile_pics')
-        cv = _save_upload('cv', 'cv')
-        lm = _save_upload('lettre', 'lettres')
+        try:
+            pdp = _save_upload('profile_pic', 'profile_pics')
+            cv = _save_upload('cv', 'cv')
+            lm = _save_upload('lettre', 'lettres')
+        except ValueError as err:
+            cursor.close()
+            conn.close()
+            return jsonify({'status': 'error', 'message': str(err)}), 400
 
         cursor.close()
         cursor = conn.cursor()
