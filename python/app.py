@@ -1,5 +1,5 @@
 import os, mysql.connector
-from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, make_response, redirect, render_template_string
+from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, redirect, render_template_string, session
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, SelectField, SubmitField
@@ -14,7 +14,15 @@ app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_fol
 app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
 csrf = CSRFProtect(app)
+
+
+@app.context_processor
+def inject_auth_state():
+    return {"is_logged_in": bool(session.get("user_id"))}
 
 
 class RechercheForm(FlaskForm):
@@ -98,7 +106,7 @@ def home():
 @app.route('/profil', methods=['POST', 'GET'])
 @csrf.exempt
 def profil():
-    user_id = request.cookies.get('UserID')
+    user_id = session.get('user_id')
     if not user_id:
         return redirect('/login')
 
@@ -236,9 +244,9 @@ def login():
     cursor.close()
     db.close()
 
-    resp = make_response(redirect('/profil'))
-    resp.set_cookie('UserID', str(user_id))
-    return resp
+    session.clear()
+    session['user_id'] = user_id
+    return redirect('/profil')
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -280,9 +288,9 @@ def register():
     except mysql.connector.Error as err:
         return render_template("register.html", error=f"Erreur DB : {err}"), 500
 
-    resp = make_response(redirect('/profil'))
-    resp.set_cookie('UserID', str(user_id))
-    return resp
+    session.clear()
+    session['user_id'] = user_id
+    return redirect('/profil')
 
 
 @app.route("/recherche", methods=["GET", "POST"])
@@ -337,9 +345,8 @@ def recherche():
 @app.route('/logout')
 @csrf.exempt
 def logout():
-    response = make_response(redirect('/'))
-    response.delete_cookie('UserID')
-    return response
+    session.clear()
+    return redirect('/')
 
 
 if __name__ == '__main__':
