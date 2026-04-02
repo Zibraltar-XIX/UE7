@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
 <div class="box_formulaire">
@@ -18,6 +19,7 @@
     <div class="formulaire_principal">
         <h1>Connexion</h1>
         <form action="/login" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="champs-formulaire">
                 <label for="email">Email</label>
                 <input type="email" id="email" name="email" required>

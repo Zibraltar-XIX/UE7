@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="../css/register.css">
     <link rel="stylesheet" href="../css/main.css">
     <link rel="icon" href="../src/logo tah les fous.png">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
 <div class="box_inscription">
@@ -16,6 +17,7 @@
         <h1>Inscription</h1>
 
         <form id="formulaire_inscription" action="/register" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div class="selection_formualire">
                 <label>Je suis :</label>

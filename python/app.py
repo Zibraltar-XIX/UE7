@@ -125,7 +125,6 @@ def home():
 
 
 @app.route('/profil', methods=['POST', 'GET'])
-@csrf.exempt
 def profil():
     user_id = session.get('user_id')
     if not user_id:
@@ -244,7 +243,6 @@ def profil():
 
 
 @app.route('/login', methods=['GET', 'POST'])
-@csrf.exempt
 def login():
     if request.method == 'GET':
         return render_template('login.html')
@@ -276,7 +274,6 @@ def login():
 
 
 @app.route('/register', methods=['GET', 'POST'])
-@csrf.exempt
 def register():
     if request.method == 'GET':
         return render_template('register.html', error=None)
