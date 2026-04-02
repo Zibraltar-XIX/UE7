@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
 <div class="main">
@@ -166,7 +167,7 @@
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.id = el.id;
-                input.value = el.innerText;
+                input.value = el.textContent;
                 input.className = 'edit-input';
                 input.dataset.originalId = el.id;
                 el.replaceWith(input);
@@ -208,7 +209,7 @@
                 if (el.tagName === 'INPUT') {
                     formData.append(id, el.value);
                 } else {
-                    formData.append(id, el.innerText.trim());
+                    formData.append(id, el.textContent.trim());
                 }
             }
         });
@@ -228,8 +229,16 @@
             formData.append('lettre', lettre);
         }
 
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
         try {
-            const response = await fetch('/profil', {method: 'POST', body: formData});
+            const response = await fetch('/profil', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            });
             const result = await response.json();
 
             if (result.status === 'success') {

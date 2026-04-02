@@ -13,6 +13,7 @@ SITE_DIR = os.path.join(BASE_DIR, "site")
 
 # Configuration de Flask
 app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_folder=SITE_DIR, static_url_path='/site')
+app.jinja_env.autoescape = True # Corrige XSS des tempates Jinja
 app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
@@ -200,7 +201,6 @@ def home():
 
 
 @app.route('/profil', methods=['POST', 'GET'])
-@csrf.exempt
 def profil():
     user_id = session.get('user_id')
     if not user_id:
@@ -319,7 +319,6 @@ def profil():
 
 
 @app.route('/login', methods=['GET', 'POST'])
-@csrf.exempt
 def login():
     if request.method == 'GET':
         return render_template('login.html')
@@ -365,7 +364,6 @@ def login():
 
 
 @app.route('/register', methods=['GET', 'POST'])
-@csrf.exempt
 def register():
     if request.method == 'GET':
         return render_template('register.html', error=None)
@@ -463,6 +461,19 @@ def logout():
     session.clear()
     return redirect('/')
 
+@app.after_request
+def add_security_headers(response):
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src https://fonts.gstatic.com; "
+        "img-src 'self' data: https:; "
+        "frame-ancestors 'none';"
+    )
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
