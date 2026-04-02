@@ -166,7 +166,7 @@
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.id = el.id;
-                input.value = el.innerText;
+                input.value = el.textContent;
                 input.className = 'edit-input';
                 input.dataset.originalId = el.id;
                 el.replaceWith(input);
@@ -208,7 +208,7 @@
                 if (el.tagName === 'INPUT') {
                     formData.append(id, el.value);
                 } else {
-                    formData.append(id, el.innerText.trim());
+                    formData.append(id, el.textContent.trim());
                 }
             }
         });
