@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recherche candidats</title>
+    <title>Recherche</title>
     <link rel="stylesheet" href="/site/css/main.css">
     <link rel="stylesheet" href="/site/css/recherche.css">
     <link rel="icon" href="/site/src/logo tah les fous.png">
@@ -20,8 +20,8 @@
 
     <div class="search-hero-content">
         <p class="hero-kicker">Recherche</p>
-        <h1>Recherche de profils candidats</h1>
-        <p>Filtrez les candidats selon leurs competences, leur contrat et leur domaine.</p>
+        <h1>Recherche de profils et d annonces</h1>
+        <p>Retrouvez des utilisateurs et des annonces depuis la meme page, avec des filtres simples.</p>
     </div>
 </section>
 
@@ -65,88 +65,145 @@
     <section class="results-section">
         <div class="results-header">
             <div>
-                <h2>Profils</h2>
+                <h2>Resultats</h2>
                 <p class="results-count">
-                    {% if candidats %}
-                    {{ candidats|length }} candidat{{ 's' if candidats|length > 1 else '' }} affiche{{ 's' if candidats|length > 1 else '' }}
-                    {% else %}
-                    Aucun resultat pour le moment
-                    {% endif %}
+                {% if total_resultats %}
+                {{ total_resultats }} resultat{{ 's' if total_resultats > 1 else '' }} affiche{{ 's' if total_resultats > 1 else '' }}
+                {% else %}
+                Aucun resultat pour le moment
+                {% endif %}
                 </p>
             </div>
             <div class="results-badge">
                 {% if form.q.data %}
                 Recherche : {{ form.q.data }}
+                {% elif form.contrat.data or form.domaine.data %}
+                Filtres actifs
                 {% else %}
-                Tous les profils
+                Tous les profils et annonces
                 {% endif %}
             </div>
         </div>
 
-        {% if candidats %}
-        <div class="grid">
-            {% for c in candidats %}
-            {% set initials = (c.prenom[0] ~ c.nom[0]) if c.prenom and c.nom else 'NA' %}
-            {% set avatar_class = ['av-p', 'av-t', 'av-c', 'av-b', 'av-m'][loop.index0 % 5] %}
-            <article class="card">
-                <div class="card-top">
-                    <div class="avatar {{ avatar_class }}">{{ initials|upper }}</div>
-                    <div>
-                        <div class="card-name">{{ c.prenom }} {{ c.nom }}</div>
-                        <div class="card-role">{{ c.domaine }}</div>
+        {% if profils %}
+        <div class="results-block">
+            <div class="block-header">
+                <h3>Profils utilisateurs</h3>
+                <p>{{ profils|length }} profil{{ 's' if profils|length > 1 else '' }}</p>
+            </div>
+
+            <div class="grid">
+                {% for profil in profils %}
+                {% set initials = ((profil.prenom[:1] or '') ~ (profil.nom[:1] or ''))|upper %}
+                {% set full_name = (profil.prenom ~ ' ' ~ profil.nom)|trim %}
+                <article class="card">
+                    <div class="card-top">
+                        <div class="avatar {{ ['av-p', 'av-t', 'av-c', 'av-b', 'av-m'][loop.index0 % 5] }}">{{ initials or 'PR' }}</div>
+                        <div>
+                            <div class="card-name">{{ full_name or 'Utilisateur' }}</div>
+                            <div class="card-role">{{ profil.role or 'Profil' }}</div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="card-pitch">
-                    Candidat oriente <strong>{{ c.domaine }}</strong>, recherchant un
-                    <strong>
-                        {% if c.contrat == 'alternance' %}contrat en alternance
-                        {% elif c.contrat == 'stage' %}stage
-                        {% else %}type de contrat non precise
+                    <div class="card-pitch">
+                        {{ profil.description or profil.emplois or profil.competences or 'Profil utilisateur disponible dans l annuaire.' }}
+                    </div>
+
+                    <div class="card-tags">
+                        {% if profil.role %}
+                        <span class="tag tag-primary">{{ profil.role }}</span>
                         {% endif %}
-                    </strong>.
-                </div>
-
-                <div class="card-tags">
-                    <span class="tag tag-primary">{{ c.domaine|capitalize }}</span>
-                    <span class="tag">
-                        {% if c.contrat == 'alternance' %}Alternance
-                        {% elif c.contrat == 'stage' %}Stage
-                        {% else %}Contrat inconnu
+                        {% if profil.emplois %}
+                        <span class="tag">{{ profil.emplois }}</span>
                         {% endif %}
-                    </span>
-                    {% if c.disponible %}
-                    <span class="tag">Disponible</span>
-                    {% else %}
-                    <span class="tag">Non disponible</span>
-                    {% endif %}
-                </div>
-
-                <div class="card-footer">
-                    <div>
-                        {% if c.contrat == 'alternance' %}
-                        <span class="badge-alt">Alternance</span>
-                        {% elif c.contrat == 'stage' %}
-                        <span class="badge-stage">Stage</span>
-                        {% else %}
-                        <span class="badge-both">Profil</span>
+                        {% if profil.competences %}
+                        <span class="tag">Competences renseignees</span>
                         {% endif %}
                     </div>
-                    <div class="card-dispo">
-                        {% if c.disponible %}Disponible{% else %}Non disponible{% endif %}
+
+                    <div class="card-footer">
+                        <div>
+                            {% if profil.contrat == 'alternance' %}
+                            <span class="badge-alt">Alternance</span>
+                            {% elif profil.contrat == 'stage' %}
+                            <span class="badge-stage">Stage</span>
+                            {% else %}
+                            <span class="badge-both">Profil</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-dispo">{{ profil.adresse or 'Voir le profil pour plus de details' }}</div>
                     </div>
-                </div>
-            </article>
-            {% endfor %}
+                </article>
+                {% endfor %}
+            </div>
         </div>
-        {% else %}
+        {% endif %}
+
+        {% if annonces %}
+        <div class="results-block">
+            <div class="block-header">
+                <h3>Annonces</h3>
+                <p>{{ annonces|length }} annonce{{ 's' if annonces|length > 1 else '' }}</p>
+            </div>
+
+            <div class="grid">
+                {% for annonce in annonces %}
+                <article class="card">
+                    <div class="card-top">
+                        <div class="avatar av-b">AN</div>
+                        <div>
+                            <div class="card-name">{{ annonce.titre or 'Annonce' }}</div>
+                            <div class="card-role">
+                                {% if annonce.auteur %}
+                                Publiee par {{ annonce.auteur }}
+                                {% else %}
+                                Annonce publiee
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-pitch">
+                        {{ annonce.description or 'Aucune description fournie.' }}
+                    </div>
+
+                    <div class="card-tags">
+                        {% if annonce.contrat == 'alternance' %}
+                        <span class="tag tag-primary">Alternance</span>
+                        {% elif annonce.contrat == 'stage' %}
+                        <span class="tag tag-primary">Stage</span>
+                        {% endif %}
+                        {% if annonce.role %}
+                        <span class="tag">{{ annonce.role }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-footer">
+                        <div>
+                            {% if annonce.contrat == 'alternance' %}
+                            <span class="badge-alt">Alternance</span>
+                            {% elif annonce.contrat == 'stage' %}
+                            <span class="badge-stage">Stage</span>
+                            {% else %}
+                            <span class="badge-both">Annonce</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-dispo">{{ annonce.auteur or 'Publication sans auteur' }}</div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not profils and not annonces %}
         <div class="empty">
-            <strong>Aucun candidat affiche</strong>
+            <strong>Aucun resultat affiche</strong>
             <p>
                 {% if form.q.data %}
                 Aucun resultat pour <span class="empty-query">{{ form.q.data }}</span>.
                 {% else %}
-                Lancez une recherche pour afficher des profils.
+                Lancez une recherche pour afficher des profils ou des annonces.
                 {% endif %}
             </p>
         </div>

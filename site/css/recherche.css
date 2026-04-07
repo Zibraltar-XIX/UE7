@@ -179,6 +179,10 @@
     margin-top: 28px;
 }
 
+.results-block + .results-block {
+    margin-top: 28px;
+}
+
 .results-header {
     display: flex;
     align-items: flex-end;
@@ -189,6 +193,24 @@
 
 .results-header h2 {
     margin: 0 0 6px;
+}
+
+.block-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.block-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.block-header p {
+    margin: 0;
+    color: #5c6d7e;
 }
 
 .results-count {
@@ -420,6 +442,7 @@
     }
 
     .results-header,
+    .block-header,
     .card-footer {
         flex-direction: column;
         align-items: flex-start;
