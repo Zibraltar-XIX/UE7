@@ -1,7 +1,6 @@
 import os, uuid, mysql.connector
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, redirect, session, flash, render_template_string
-from rich import console
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm, CSRFProtect
@@ -17,7 +16,7 @@ app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_fol
 app.jinja_env.autoescape = True # Corrige XSS des tempates Jinja
 app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev_secret)")
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
