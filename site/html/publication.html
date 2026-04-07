@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publication</title>
+    <link rel="stylesheet" href="/site/css/main.css">
+    <link rel="stylesheet" href="/site/css/publication.css">
+    <link rel="icon" href="/site/src/logo tah les fous.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+</head>
+<body class="publication-page">
+<section class="publication-hero">
+    <nav class="publication-nav">
+        <a href="/" class="brand-link">Alternance tah les fous</a>
+        <div class="nav-actions">
+            <a href="/" class="nav-link">Accueil</a>
+            <a href="/profil" class="nav-link">Profil</a>
+        </div>
+    </nav>
+
+    <div class="publication-hero-content">
+        <p class="hero-kicker">Publication</p>
+        <h1>Publier une annonce simplement</h1>
+        <p>Ajoutez un titre, choisissez un contrat et decrivez votre annonce. Le reste doit rester clair et direct.</p>
+    </div>
+</section>
+
+<main class="publication-main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <ul class="flash-list">
+        {% for category, message in messages %}
+        <li class="flash-item flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+
+    <div class="publication-layout">
+        <section class="publication-card">
+            <div class="section-head">
+                <h2>Nouvelle annonce</h2>
+                <p>Remplissez uniquement l essentiel. L annonce sera rattachee a votre compte.</p>
+            </div>
+
+            <form method="POST" class="publication-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="field-group">
+                    <label for="titre">Titre</label>
+                    <input
+                        type="text"
+                        id="titre"
+                        name="titre"
+                        maxlength="255"
+                        placeholder="Exemple : Alternant pentest IoT"
+                        value="{{ values.titre }}"
+                        required
+                    >
+                </div>
+
+                <div class="field-group">
+                    <label for="contrat">Type de contrat</label>
+                    <select id="contrat" name="contrat" required>
+                        <option value="">Selectionnez un contrat</option>
+                        <option value="Alternance" {% if values.contrat == "Alternance" %}selected{% endif %}>Alternance</option>
+                        <option value="Stage" {% if values.contrat == "Stage" %}selected{% endif %}>Stage</option>
+                    </select>
+                </div>
+
+                <div class="field-group">
+                    <label for="description">Description</label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows="8"
+                        placeholder="Precisez le contexte, les missions et le profil recherche."
+                        required
+                    >{{ values.description }}</textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="submit-button">Publier l annonce</button>
+                </div>
+            </form>
+        </section>
+
+        <aside class="tips-card">
+            <h2>Conseils rapides</h2>
+            <ul>
+                <li>Choisissez un titre court et facile a comprendre.</li>
+                <li>Decrivez les missions avec des phrases simples.</li>
+                <li>Gardez un seul type de contrat par annonce.</li>
+            </ul>
+        </aside>
+    </div>
+</main>
+</body>
+</html>
