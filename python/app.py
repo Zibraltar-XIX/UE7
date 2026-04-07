@@ -1,6 +1,7 @@
 import os, uuid, mysql.connector
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, redirect, render_template_string, session
+from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, redirect, session
+from rich import console
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm, CSRFProtect
@@ -410,46 +411,38 @@ def register():
 def recherche():
     form = RechercheForm()
     candidats = []
+    db = None
+    cursor = None
 
     try:
         db = db_connection()
         cursor = db.cursor(dictionary=True)
-        cursor.execute("""SELECT id, nom, prenom, domaine, contrat, disponible, pitch FROM candidats WHERE 1=1""")
+        cursor.execute("SELECT id, nom, prenom, domaine, contrat, disponible, pitch FROM candidats")
         candidats = cursor.fetchall()
-        cursor.close()
-        db.close()
-    except Exception as e:
-        print(f"DB Error: {e}")
-        candidats = []
-
-    template_path = os.path.join(app.template_folder, "recherche.html")
-
-    with open(template_path, "r", encoding="utf-8") as f:
-        template_str = f.read()
+    except Exception as error:
+        print(f"DB Error: {error}")
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if db is not None:
+            db.close()
 
     if form.validate_on_submit():
-        q = (form.q.data or "").strip().lower()
-        contrat = form.contrat.data or ""
-        domaine = form.domaine.data or ""
-        tri = form.tri.data or "recent"
+        recherche_texte = (form.q.data or "").strip().lower()
 
-        if q:
-            candidats = [c for c in candidats
-                         if q in c["nom"].lower() or q in c["prenom"].lower()
-                         or q in c["domaine"].lower() or q in c["contrat"].lower()
-                         or q in c.get("pitch", "").lower()]
+        if recherche_texte:
+            candidats = [
+                candidat
+                for candidat in candidats
+                if recherche_texte in (candidat.get("nom") or "").lower()
+                or recherche_texte in (candidat.get("prenom") or "").lower()
+                or recherche_texte in (candidat.get("domaine") or "").lower()
+                or recherche_texte in (candidat.get("contrat") or "").lower()
+                or recherche_texte in (candidat.get("pitch") or "").lower()
+            ]
 
-        ssti_raw = request.form.get("q", "")
-        vuln_template = template_str.replace("SSTI_PLACEHOLDER", ssti_raw)
-
-        return render_template_string(
-            vuln_template,
-            form=form,
-            candidats=candidats,
-        )
-
-    return render_template_string(
-        template_str.replace("SSTI_PLACEHOLDER", ""),
+    return render_template(
+        "recherche.html",
         form=form,
         candidats=candidats,
     )
@@ -476,4 +469,4 @@ def add_security_headers(response):
     return response
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", debug=True)
+    app.run(host="0.0.0.0", debug=False)

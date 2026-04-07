@@ -3,72 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recherche Profils Candidats</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;700&family=Inter:wght@300;400;500;600&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        :root {
-            --bg-p: #EEEDFE; --bg-t: #E1F5EE; --bg-c: #FAECE7; --bg-b: #E6F1FB; --bg-m: #FBEAF0;
-            --purple: #3C3489; --purple-lt: #AFA9EC; --green: #0F6E56; --green-lt: #5DCAA5;
-            --orange: #633806; --orange-lt: #EF9F27; --text: #111827; --muted: #6B7280;
-            --border: #E5E7EB; --bg: #F8F9FA; --white: #FFFFFF; --br-md: 8px; --br-lg: 14px;
-            --shadow: 0 4px 16px rgba(0,0,0,0.06);
-        }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
-        .wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 48px; }
-        .page-header { margin-bottom: 24px; }
-        .page-title { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700; color: var(--purple); margin-bottom: 8px; }
-        .page-subtitle { font-size: 14px; color: var(--muted); line-height: 1.6; }
-        .search-panel { background: var(--white); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 24px; }
-        .search-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 12px; align-items: end; }
-        .field-group { display: flex; flex-direction: column; gap: 6px; }
-        .field-group label { font-size: 13px; font-weight: 600; color: var(--muted); }
-        .field-group input, .field-group select { width: 100%; height: 44px; border: 1px solid var(--border); border-radius: 10px; padding: 0 14px; font-size: 14px; background: #fff; outline: none; transition: border-color .15s ease, box-shadow .15s ease; }
-        .field-group input:focus, .field-group select:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(60,52,137,0.08); }
-        .btn-search { height: 44px; border: none; border-radius: 10px; background: var(--purple); color: #fff; font-weight: 600; font-size: 14px; padding: 0 18px; cursor: pointer; transition: background .15s ease, transform .15s ease; }
-        .btn-search:hover { background: #2d2559; transform: translateY(-1px); }
-        .flash-list { list-style: none; margin-bottom: 18px; }
-        .flash-item { background: #F3F0FF; color: var(--purple); border: 1px solid #D9D4FF; border-radius: 10px; padding: 12px 14px; font-size: 14px; margin-bottom: 10px; }
-        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 12px; }
-        .results-count { font-size: 14px; color: var(--muted); }
-        .results-badge { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--border); padding: 8px 12px; border-radius: 999px; font-size: 13px; color: var(--muted); }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
-        .card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
-        .card:hover { transform: translateY(-3px); border-color: var(--purple-lt); box-shadow: 0 10px 24px rgba(60,52,137,0.12); }
-        .card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-        .avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; flex-shrink: 0; }
-        .av-p { background: var(--bg-p); color: var(--purple); }
-        .av-t { background: var(--bg-t); color: var(--green); }
-        .av-c { background: var(--bg-c); color: #712B13; }
-        .av-b { background: var(--bg-b); color: #0C447C; }
-        .av-m { background: var(--bg-m); color: #72243E; }
-        .card-name { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1.2; }
-        .card-role { font-size: 13px; color: var(--muted); margin-top: 3px; text-transform: capitalize; }
-        .card-pitch { font-size: 13px; color: #4B5563; line-height: 1.6; margin-bottom: 14px; min-height: 62px; }
-        .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-        .tag { font-size: 11px; padding: 4px 9px; border-radius: 999px; background: #F9FAFB; color: var(--muted); border: 1px solid var(--border); }
-        .tag-purple { background: var(--bg-p); color: var(--purple); border-color: var(--purple-lt); }
-        .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px; gap: 10px; }
-        .badge-alt, .badge-stage, .badge-both { font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
-        .badge-alt { background: var(--bg-p); color: var(--purple); border-color: var(--purple-lt); }
-        .badge-stage { background: var(--bg-t); color: var(--green); border-color: var(--green-lt); }
-        .badge-both { background: #FAEEDA; color: var(--orange); border-color: var(--orange-lt); }
-        .card-dispo { font-size: 12px; color: var(--muted); text-align: right; }
-        .empty { text-align: center; padding: 56px 20px; color: var(--muted); background: #fff; border: 1px dashed var(--border); border-radius: 16px; }
-        .empty strong { display: block; color: var(--text); margin-bottom: 6px; font-size: 16px; }
-        .helper { margin-top: 10px; font-size: 12px; color: var(--muted); }
-        @media (max-width: 900px) { .search-grid { grid-template-columns: 1fr 1fr; } .search-grid .field-group:first-child { grid-column: 1 / -1; } .search-grid .btn-search { grid-column: 1 / -1; } }
-        @media (max-width: 640px) { .wrap { padding: 20px 14px 32px; } .page-title { font-size: 26px; } .search-grid { grid-template-columns: 1fr; } .results-header { flex-direction: column; align-items: flex-start; } .grid { grid-template-columns: 1fr; } .card-footer { flex-direction: column; align-items: flex-start; } .card-dispo { text-align: left; } }
-    </style>
+    <title>Recherche candidats</title>
+    <link rel="stylesheet" href="/site/css/main.css">
+    <link rel="stylesheet" href="/site/css/recherche.css">
+    <link rel="icon" href="/site/src/logo tah les fous.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
 </head>
-<body>
-<div class="wrap">
+<body class="search-page">
+<section class="search-hero">
+    <nav class="search-nav">
+        <a href="/" class="brand-link">Alternance tah les fous</a>
+        <a href="/" class="home-button">Accueil</a>
+    </nav>
 
-    <div class="page-header">
-        <h1 class="page-title">Recherche Profils Candidats</h1>
-        <p class="page-subtitle">Filtre les candidats selon leurs compétences, leur type de contrat et leur domaine.</p>
+    <div class="search-hero-content">
+        <p class="hero-kicker">Recherche</p>
+        <h1>Recherche de profils candidats</h1>
+        <p>Filtrez les candidats selon leurs competences, leur contrat et leur domaine.</p>
     </div>
+</section>
 
+<main class="search-main">
     {% with messages = get_flashed_messages() %}
     {% if messages %}
     <ul class="flash-list">
@@ -79,13 +36,13 @@
     {% endif %}
     {% endwith %}
 
-    <div class="search-panel">
-        <form method="POST">
+    <section class="search-panel">
+        <form method="POST" class="search-form">
             {{ form.hidden_tag() }}
             <div class="search-grid">
                 <div class="field-group">
                     {{ form.q.label }}
-                    {{ form.q(placeholder="Rechercher un profil, une compétence, une ville...") }}
+                    {{ form.q(placeholder="Nom, domaine, competence, ville...") }}
                 </div>
                 <div class="field-group">
                     {{ form.contrat.label }}
@@ -102,83 +59,99 @@
                 <button type="submit" class="btn-search">Rechercher</button>
             </div>
         </form>
-        <div class="helper">Utilise le formulaire pour lancer une recherche. Les résultats apparaîtront juste en dessous.</div>
-    </div>
+        <p class="helper">Utilisez le formulaire pour lancer une recherche. Les resultats s affichent juste en dessous.</p>
+    </section>
 
-    <div class="results-header">
-        <div class="results-count">
-            {% if candidats %}
-            {{ candidats|length }} candidat{{ 's' if candidats|length > 1 else '' }} trouvé{{ 's' if candidats|length > 1 else '' }}
-            {% else %}
-            Aucun résultat pour le moment
-            {% endif %}
-        </div>
-        <div class="results-badge">
-            <span>Recherche candidats</span>
-        </div>
-    </div>
-
-    {% if candidats %}
-    <div class="grid">
-        {% for c in candidats %}
-        {% set initials = (c.prenom[0] ~ c.nom[0]) if c.prenom and c.nom else 'NA' %}
-        {% set avatar_class = ['av-p', 'av-t', 'av-c', 'av-b', 'av-m'][loop.index0 % 5] %}
-        <div class="card">
-            <div class="card-top">
-                <div class="avatar {{ avatar_class }}">{{ initials|upper }}</div>
-                <div>
-                    <div class="card-name">{{ c.prenom }} {{ c.nom }}</div>
-                    <div class="card-role">{{ c.domaine }}</div>
-                </div>
-            </div>
-            <div class="card-pitch">
-                Candidat orienté <strong>{{ c.domaine }}</strong>, recherchant un
-                <strong>
-                    {% if c.contrat == 'alternance' %} contrat en alternance
-                    {% elif c.contrat == 'stage' %} stage
-                    {% else %} type de contrat non précisé
+    <section class="results-section">
+        <div class="results-header">
+            <div>
+                <h2>Profils</h2>
+                <p class="results-count">
+                    {% if candidats %}
+                    {{ candidats|length }} candidat{{ 's' if candidats|length > 1 else '' }} affiche{{ 's' if candidats|length > 1 else '' }}
+                    {% else %}
+                    Aucun resultat pour le moment
                     {% endif %}
-                </strong>.
+                </p>
             </div>
-            <div class="card-tags">
-                <span class="tag tag-purple">{{ c.domaine|capitalize }}</span>
-                <span class="tag">
-                    {% if c.contrat == 'alternance' %} Alternance
-                    {% elif c.contrat == 'stage' %} Stage
-                    {% else %} Contrat inconnu
-                    {% endif %}
-                </span>
-                {% if c.disponible %}
-                <span class="tag">Disponible</span>
+            <div class="results-badge">
+                {% if form.q.data %}
+                Recherche : {{ form.q.data }}
                 {% else %}
-                <span class="tag">Non disponible</span>
+                Tous les profils
                 {% endif %}
             </div>
-            <div class="card-footer">
-                <div>
-                    {% if c.contrat == 'alternance' %}
-                    <span class="badge-alt">Alternance</span>
-                    {% elif c.contrat == 'stage' %}
-                    <span class="badge-stage">Stage</span>
+        </div>
+
+        {% if candidats %}
+        <div class="grid">
+            {% for c in candidats %}
+            {% set initials = (c.prenom[0] ~ c.nom[0]) if c.prenom and c.nom else 'NA' %}
+            {% set avatar_class = ['av-p', 'av-t', 'av-c', 'av-b', 'av-m'][loop.index0 % 5] %}
+            <article class="card">
+                <div class="card-top">
+                    <div class="avatar {{ avatar_class }}">{{ initials|upper }}</div>
+                    <div>
+                        <div class="card-name">{{ c.prenom }} {{ c.nom }}</div>
+                        <div class="card-role">{{ c.domaine }}</div>
+                    </div>
+                </div>
+
+                <div class="card-pitch">
+                    Candidat oriente <strong>{{ c.domaine }}</strong>, recherchant un
+                    <strong>
+                        {% if c.contrat == 'alternance' %}contrat en alternance
+                        {% elif c.contrat == 'stage' %}stage
+                        {% else %}type de contrat non precise
+                        {% endif %}
+                    </strong>.
+                </div>
+
+                <div class="card-tags">
+                    <span class="tag tag-primary">{{ c.domaine|capitalize }}</span>
+                    <span class="tag">
+                        {% if c.contrat == 'alternance' %}Alternance
+                        {% elif c.contrat == 'stage' %}Stage
+                        {% else %}Contrat inconnu
+                        {% endif %}
+                    </span>
+                    {% if c.disponible %}
+                    <span class="tag">Disponible</span>
                     {% else %}
-                    <span class="badge-both">Profil</span>
+                    <span class="tag">Non disponible</span>
                     {% endif %}
                 </div>
-                <div class="card-dispo">
-                    {% if c.disponible %}✅ Disponible{% else %}⏳ Non disponible{% endif %}
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="empty">
-        <strong>Aucun candidat affiché</strong>
-        <!-- ⚠️ FAILLE ICI : SSTI_PLACEHOLDER remplacé par le payload brut avant parsing Jinja -->
-        Aucun résultat pour : SSTI_PLACEHOLDER
-    </div>
-    {% endif %}
 
-</div>
+                <div class="card-footer">
+                    <div>
+                        {% if c.contrat == 'alternance' %}
+                        <span class="badge-alt">Alternance</span>
+                        {% elif c.contrat == 'stage' %}
+                        <span class="badge-stage">Stage</span>
+                        {% else %}
+                        <span class="badge-both">Profil</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-dispo">
+                        {% if c.disponible %}Disponible{% else %}Non disponible{% endif %}
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty">
+            <strong>Aucun candidat affiche</strong>
+            <p>
+                {% if form.q.data %}
+                Aucun resultat pour <span class="empty-query">{{ form.q.data }}</span>.
+                {% else %}
+                Lancez une recherche pour afficher des profils.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </section>
+</main>
 </body>
 </html>
