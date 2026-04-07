@@ -1,5 +1,8 @@
-import os, mysql.connector
-from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, make_response, redirect, render_template_string
+import os, uuid, mysql.connector
+from datetime import datetime, timedelta
+from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, redirect, session, flash, render_template_string
+from rich import console
+from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, SelectField, SubmitField
@@ -11,10 +14,38 @@ SITE_DIR = os.path.join(BASE_DIR, "site")
 
 # Configuration de Flask
 app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_folder=SITE_DIR, static_url_path='/site')
+app.jinja_env.autoescape = True # Corrige XSS des tempates Jinja
 app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
 csrf = CSRFProtect(app)
+
+
+@app.context_processor
+def inject_auth_state():
+    return {"is_logged_in": bool(session.get("user_id"))}
+
+
+ALLOWED_UPLOAD_EXTENSIONS = {
+    "profile_pic": {"jpg", "jpeg", "png", "webp"},
+    "cv": {"pdf"},
+    "lettre": {"pdf"},
+}
+
+UPLOAD_ERROR_MESSAGES = {
+    "profile_pic": "La photo de profil doit etre au format JPG, JPEG, PNG ou WEBP.",
+    "cv": "Le CV doit etre au format PDF.",
+    "lettre": "La lettre de motivation doit etre au format PDF.",
+}
+
+LOGIN_ERROR_MESSAGE = "Identifiant ou mot de passe incorrect."
+LOCKOUT_ERROR_MESSAGE = "Trop de tentatives de connexion. Reessaie plus tard."
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_DURATION = timedelta(minutes=15)
+FAILED_LOGIN_ATTEMPTS = {}
 
 
 class RechercheForm(FlaskForm):
@@ -50,6 +81,74 @@ def to_str(val):
     return val or ''
 
 
+def _normalize_email(email: str) -> str:
+    return (email or "").strip().lower()
+
+
+def _is_password_hash(password_value: str) -> bool:
+    return isinstance(password_value, str) and password_value.startswith(("scrypt:", "pbkdf2:"))
+
+
+def _verify_password(stored_password: str, candidate_password: str):
+    if not stored_password or candidate_password is None:
+        return False, None
+
+    if _is_password_hash(stored_password):
+        return check_password_hash(stored_password, candidate_password), None
+
+    is_valid = candidate_password == stored_password
+    if not is_valid:
+        return False, None
+
+    return True, generate_password_hash(candidate_password)
+
+
+def _clear_failed_login_attempts(identifier: str) -> None:
+    if identifier:
+        FAILED_LOGIN_ATTEMPTS.pop(identifier, None)
+
+
+def _is_login_locked(identifier: str) -> bool:
+    if not identifier:
+        return False
+
+    attempt_state = FAILED_LOGIN_ATTEMPTS.get(identifier)
+    if not attempt_state:
+        return False
+
+    now = datetime.utcnow()
+    locked_until = attempt_state.get("locked_until")
+    last_failure = attempt_state.get("last_failure")
+
+    if locked_until and locked_until > now:
+        return True
+
+    if locked_until or (last_failure and now - last_failure > LOCKOUT_DURATION):
+        FAILED_LOGIN_ATTEMPTS.pop(identifier, None)
+
+    return False
+
+
+def _record_failed_login(identifier: str) -> bool:
+    if not identifier:
+        return False
+
+    now = datetime.utcnow()
+    attempt_state = FAILED_LOGIN_ATTEMPTS.get(identifier)
+
+    if not attempt_state or now - attempt_state["last_failure"] > LOCKOUT_DURATION:
+        attempt_state = {"count": 0, "last_failure": now, "locked_until": None}
+
+    attempt_state["count"] += 1
+    attempt_state["last_failure"] = now
+
+    if attempt_state["count"] >= MAX_LOGIN_ATTEMPTS:
+        attempt_state["locked_until"] = now + LOCKOUT_DURATION
+
+    FAILED_LOGIN_ATTEMPTS[identifier] = attempt_state
+    return bool(attempt_state["locked_until"] and attempt_state["locked_until"] > now)
+
+
 def _save_upload(field_name: str, category: str) -> dict:
     file = request.files.get(field_name)
     if not file or not file.filename:
@@ -58,7 +157,14 @@ def _save_upload(field_name: str, category: str) -> dict:
     category_dir = os.path.join(app.config['UPLOAD_FOLDER'], category)
     os.makedirs(category_dir, exist_ok=True)
 
-    filename = secure_filename(file.filename)
+    original_filename = secure_filename(file.filename)
+    _, extension = os.path.splitext(original_filename)
+    extension = extension.lower().lstrip('.')
+
+    if extension not in ALLOWED_UPLOAD_EXTENSIONS.get(field_name, set()):
+        raise ValueError(UPLOAD_ERROR_MESSAGES.get(field_name, "Type de fichier non autorise."))
+
+    filename = f"{uuid.uuid4().hex}.{extension}"
     save_path = os.path.join(category_dir, filename)
     file.save(save_path)
 
@@ -96,9 +202,8 @@ def home():
 
 
 @app.route('/profil', methods=['POST', 'GET'])
-@csrf.exempt
 def profil():
-    user_id = request.cookies.get('UserID')
+    user_id = session.get('user_id')
     if not user_id:
         return redirect('/login')
 
@@ -127,9 +232,14 @@ def profil():
         emplois = request.form.get('Emplois', '').strip()
         competences = request.form.get('Competences', '').strip()
         description = request.form.get('Description', '').strip()
-        pdp = _save_upload('profile_pic', 'profile_pics')
-        cv = _save_upload('cv', 'cv')
-        lm = _save_upload('lettre', 'lettres')
+        try:
+            pdp = _save_upload('profile_pic', 'profile_pics')
+            cv = _save_upload('cv', 'cv')
+            lm = _save_upload('lettre', 'lettres')
+        except ValueError as err:
+            cursor.close()
+            conn.close()
+            return jsonify({'status': 'error', 'message': str(err)}), 400
 
         cursor.close()
         cursor = conn.cursor()
@@ -210,39 +320,51 @@ def profil():
 
 
 @app.route('/login', methods=['GET', 'POST'])
-@csrf.exempt
 def login():
     if request.method == 'GET':
         return render_template('login.html')
 
-    email = request.form.get('email')
-    password = request.form.get('password')
+    email = _normalize_email(request.form.get('email'))
+    password = request.form.get('password', '')
+    login_identifier = email or (request.remote_addr or "anonymous")
+
+    if _is_login_locked(login_identifier):
+        return render_template("login.html", error=LOCKOUT_ERROR_MESSAGE), 429
 
     db = db_connection()
     cursor = db.cursor(dictionary=True)
 
-    cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
+    cursor.execute("SELECT id, MotDePasse FROM Utilisateurs WHERE Email = %s", (email,))
     row = cursor.fetchone()
     if row is None:
-        return render_template("register.html", error="Utilisateur inconnu")
-    user_id = row['id']
+        is_now_locked = _record_failed_login(login_identifier)
+        cursor.close()
+        db.close()
+        error_message = LOCKOUT_ERROR_MESSAGE if is_now_locked else LOGIN_ERROR_MESSAGE
+        return render_template("login.html", error=error_message), 401
 
-    cursor.execute("SELECT MotDePasse FROM Utilisateurs WHERE Email = %s", (email,))
-    row = cursor.fetchone()
-    MotDePass = row['MotDePasse']
-    if str(password) != str(MotDePass):
-        return render_template("login.html", error="Le mot de passe est different de : " + MotDePass)
+    is_valid_password, upgraded_password_hash = _verify_password(row.get('MotDePasse'), password)
+    if not is_valid_password:
+        is_now_locked = _record_failed_login(login_identifier)
+        cursor.close()
+        db.close()
+        error_message = LOCKOUT_ERROR_MESSAGE if is_now_locked else LOGIN_ERROR_MESSAGE
+        return render_template("login.html", error=error_message), 401
+
+    if upgraded_password_hash:
+        cursor.execute("UPDATE Utilisateurs SET MotDePasse = %s WHERE id = %s", (upgraded_password_hash, row['id']))
+        db.commit()
 
     cursor.close()
     db.close()
 
-    resp = make_response(redirect('/profil'))
-    resp.set_cookie('UserID', str(user_id))
-    return resp
+    _clear_failed_login_attempts(login_identifier)
+    session.clear()
+    session['user_id'] = row['id']
+    return redirect('/profil')
 
 
 @app.route('/register', methods=['GET', 'POST'])
-@csrf.exempt
 def register():
     if request.method == 'GET':
         return render_template('register.html', error=None)
@@ -250,7 +372,7 @@ def register():
     nom = request.form.get('nom', '').strip()
     prenom = request.form.get('prenom', '').strip()
     numero = request.form.get('numero', '').strip()
-    email = request.form.get('email', '').strip()
+    email = _normalize_email(request.form.get('email'))
     user_type = request.form.get('user_type', '').strip()
     password = request.form.get('password', '')
     confirm = request.form.get('confirm_password', '')
@@ -270,7 +392,7 @@ def register():
         cursor.execute(
             "INSERT INTO Utilisateurs (`Prenom`, `Nom`, Telephone, Email, Role, Adresse, MotDePasse) "
             "VALUES (%s, %s, %s, %s, %s, %s, %s)",
-            (prenom, nom, numero, email, user_type, adresse, password)
+            (prenom, nom, numero, email, user_type, adresse, generate_password_hash(password))
         )
         conn.commit()
         user_id = cursor.lastrowid
@@ -280,55 +402,94 @@ def register():
     except mysql.connector.Error as err:
         return render_template("register.html", error=f"Erreur DB : {err}"), 500
 
-    resp = make_response(redirect('/profil'))
-    resp.set_cookie('UserID', str(user_id))
-    return resp
+    session.clear()
+    session['user_id'] = user_id
+    return redirect('/profil')
+
+
+@app.route("/post", methods=["GET", "POST"])
+def publication():
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect("/login")
+
+    values = {
+        "titre": "",
+        "contrat": "",
+        "description": "",
+    }
+
+    if request.method == "POST":
+        values["titre"] = request.form.get("titre", "").strip()
+        values["contrat"] = request.form.get("contrat", "").strip()
+        values["description"] = request.form.get("description", "").strip()
+
+        if not values["titre"] or not values["contrat"] or not values["description"]:
+            flash("Tous les champs sont obligatoires.", "error")
+        elif values["contrat"] not in {"Alternance", "Stage"}:
+            flash("Le type de contrat est invalide.", "error")
+        else:
+            db = None
+            cursor = None
+
+            try:
+                db = db_connection()
+                cursor = db.cursor()
+                cursor.execute(
+                    "INSERT INTO Annonce (id_Utilisateur, Description, Titre, Contrat) VALUES (%s, %s, %s, %s)",
+                    (user_id, values["description"], values["titre"], values["contrat"]),
+                )
+                db.commit()
+                flash("Annonce publiee avec succes.", "success")
+                return redirect("/post")
+            except mysql.connector.Error as error:
+                print(f"Annonce error: {error}")
+                flash("Impossible de publier l annonce pour le moment.", "error")
+            finally:
+                if cursor is not None:
+                    cursor.close()
+                if db is not None:
+                    db.close()
+
+    return render_template("publication.html", values=values)
 
 
 @app.route("/recherche", methods=["GET", "POST"])
 def recherche():
     form = RechercheForm()
     candidats = []
+    db = None
+    cursor = None
 
     try:
         db = db_connection()
         cursor = db.cursor(dictionary=True)
-        cursor.execute("""SELECT id, nom, prenom, domaine, contrat, disponible, pitch FROM candidats WHERE 1=1""")
+        cursor.execute("SELECT id, nom, prenom, domaine, contrat, disponible, pitch FROM candidats")
         candidats = cursor.fetchall()
-        cursor.close()
-        db.close()
-    except Exception as e:
-        print(f"DB Error: {e}")
-        candidats = []
-
-    template_path = os.path.join(app.template_folder, "recherche.html")
-
-    with open(template_path, "r", encoding="utf-8") as f:
-        template_str = f.read()
+    except Exception as error:
+        print(f"DB Error: {error}")
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if db is not None:
+            db.close()
 
     if form.validate_on_submit():
-        q = (form.q.data or "").strip().lower()
-        contrat = form.contrat.data or ""
-        domaine = form.domaine.data or ""
-        tri = form.tri.data or "recent"
+        recherche_texte = (form.q.data or "").strip().lower()
 
-        if q:
-            candidats = [c for c in candidats
-                         if q in c["nom"].lower() or q in c["prenom"].lower()
-                         or q in c["domaine"].lower() or q in c["contrat"].lower()
-                         or q in c.get("pitch", "").lower()]
+        if recherche_texte:
+            candidats = [
+                candidat
+                for candidat in candidats
+                if recherche_texte in (candidat.get("nom") or "").lower()
+                or recherche_texte in (candidat.get("prenom") or "").lower()
+                or recherche_texte in (candidat.get("domaine") or "").lower()
+                or recherche_texte in (candidat.get("contrat") or "").lower()
+                or recherche_texte in (candidat.get("pitch") or "").lower()
+            ]
 
-        ssti_raw = request.form.get("q", "")
-        vuln_template = template_str.replace("SSTI_PLACEHOLDER", ssti_raw)
-
-        return render_template_string(
-            vuln_template,
-            form=form,
-            candidats=candidats,
-        )
-
-    return render_template_string(
-        template_str.replace("SSTI_PLACEHOLDER", ""),
+    return render_template(
+        "recherche.html",
         form=form,
         candidats=candidats,
     )
@@ -337,10 +498,22 @@ def recherche():
 @app.route('/logout')
 @csrf.exempt
 def logout():
-    response = make_response(redirect('/'))
-    response.delete_cookie('UserID')
+    session.clear()
+    return redirect('/')
+
+@app.after_request
+def add_security_headers(response):
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src https://fonts.gstatic.com; "
+        "img-src 'self' data: https:; "
+        "frame-ancestors 'none';"
+    )
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
 
-
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", debug=True)
+    app.run(host="0.0.0.0", debug=False)
