@@ -1,6 +1,6 @@
 import os, uuid, mysql.connector
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, redirect, render_template_string, session
+from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, redirect, flash, render_template_string, session
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm, CSRFProtect
@@ -404,6 +404,53 @@ def register():
     session.clear()
     session['user_id'] = user_id
     return redirect('/profil')
+
+
+@app.route("/post", methods=["GET", "POST"])
+def publication():
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect("/login")
+
+    values = {
+        "titre": "",
+        "contrat": "",
+        "description": "",
+    }
+
+    if request.method == "POST":
+        values["titre"] = request.form.get("titre", "").strip()
+        values["contrat"] = request.form.get("contrat", "").strip()
+        values["description"] = request.form.get("description", "").strip()
+
+        if not values["titre"] or not values["contrat"] or not values["description"]:
+            flash("Tous les champs sont obligatoires.", "error")
+        elif values["contrat"] not in {"Alternance", "Stage"}:
+            flash("Le type de contrat est invalide.", "error")
+        else:
+            db = None
+            cursor = None
+
+            try:
+                db = db_connection()
+                cursor = db.cursor()
+                cursor.execute(
+                    "INSERT INTO Annonce (id_Utilisateur, Description, Titre, Contrat) VALUES (%s, %s, %s, %s)",
+                    (user_id, values["description"], values["titre"], values["contrat"]),
+                )
+                db.commit()
+                flash("Annonce publiee avec succes.", "success")
+                return redirect("/post")
+            except mysql.connector.Error as error:
+                print(f"Annonce error: {error}")
+                flash("Impossible de publier l annonce pour le moment.", "error")
+            finally:
+                if cursor is not None:
+                    cursor.close()
+                if db is not None:
+                    db.close()
+
+    return render_template("publication.html", values=values)
 
 
 @app.route("/recherche", methods=["GET", "POST"])
