@@ -45,3 +45,17 @@ jobs:
         run: pip install bandit
       - name: run bandit
         run: bandit -r ./python/app.py --severity-level=high 
+  
+  pip-audit:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: install pip-audit
+        run: pip install pip-audit
+      - name: run pip-audit
+        run: pip-audit -r ./python/requirements.txt
