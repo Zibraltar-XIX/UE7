@@ -1,19 +1,15 @@
-# Image docker
 FROM python:3.14-slim
 
-# Dossier de travail dans le conteneur
+RUN apk update && apk upgrade --no-cache
+
 WORKDIR /app
 
-# Copier les fichiers de l'app dans le conteneur
-COPY ./site ./site
-COPY ./python ./python
-COPY .env ./.env
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Installer les dépendances Python
-RUN pip install --no-cache-dir -r ./python/requirements.txt
+COPY . .
 
-# Exposer le port de l'application
-EXPOSE 5000
+RUN useradd app
+USER app
 
-# Lancer l'application
-CMD ["python", "./python/app.py"]
+CMD ["python", "./python/app.py", "--host", "0.0.0.0", "--port", "5000"]

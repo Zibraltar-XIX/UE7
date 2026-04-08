@@ -5,7 +5,7 @@ services:
       dockerfile: app/Dockerfile
     restart: always
     ports:
-        - "80:5000"
+      - "80:5000"
     depends_on:
       - db
     cap_drop:
@@ -19,9 +19,9 @@ services:
     image: mysql:9.6
     restart: always
     env_file:
-      - .env
+      - .env.exemple
     ports:
-        - "3306:3306"
+      - "3306:3306"
     volumes:
       - ./mysql_data:/var/lib/mysql
       - ./init:/docker-entrypoint-initdb.d
