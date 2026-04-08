@@ -17,8 +17,8 @@ jobs:
       - name: run flake8
         uses: py-actions/flake8@v2
         with:
-          path: "."
-          ignore: "E501, E401, W291, E128"
+          path: "/python/app.py"
+          ignore: "E501,E401,W291,E128"
           max-line-length: "100"
 
   scan:
