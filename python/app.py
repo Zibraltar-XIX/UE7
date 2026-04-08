@@ -16,7 +16,7 @@ app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_fol
 app.jinja_env.autoescape = True # Corrige XSS des tempates Jinja
 app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev_secret)")
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
