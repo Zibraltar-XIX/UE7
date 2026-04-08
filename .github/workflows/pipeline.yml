@@ -19,7 +19,6 @@ jobs:
         with:
           ignore: "E501"
           max-line-length: "100"
-          path: "src/"
 
   scan:
     name: gitleaks
