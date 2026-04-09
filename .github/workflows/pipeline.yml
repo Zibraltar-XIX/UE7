@@ -85,6 +85,7 @@ jobs:
 
   nikto:
     name: scan nikto
+    needs: grype
     runs-on: ubuntu-latest
     steps:
       - uses: thereisnotime/action-nikto@master
