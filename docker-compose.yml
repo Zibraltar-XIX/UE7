@@ -21,7 +21,7 @@ services:
     image: mysql:9.6
     restart: always
     env_file:
-      - .env.exemple
+      - .env
     ports:
       - "3306:3306"
     volumes:
