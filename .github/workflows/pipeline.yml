@@ -73,7 +73,7 @@ jobs:
         run: docker build -t ue7-app:latest -f ./app/Dockerfile .
 
       - name: lancer app
-        run: docker run -d -p 80:5000 --name ue7-app ue7-app:latest
+        run: docker run -d -p 5000:5000 --name ue7-app ue7-app:latest
 
   grype:
     name: scan grype
