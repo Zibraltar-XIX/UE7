@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: app/Dockerfile
     restart: always
+    env_file:
+      - .env
     ports:
       - "80:5000"
     depends_on:
