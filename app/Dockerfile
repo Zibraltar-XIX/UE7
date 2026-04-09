@@ -5,10 +5,12 @@ WORKDIR /app
 COPY ./python/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+RUN useradd --create-home --shell /bin/bash app
+
+COPY --chown=app:app . .
+
 EXPOSE 5000
 
-RUN useradd app
 USER app
 
-CMD ["python", "./python/app.py", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["python", "./python/app.py"]
