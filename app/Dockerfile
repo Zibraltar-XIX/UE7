@@ -4,7 +4,7 @@ RUN apk update && apk upgrade --no-cache
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY ./python/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
