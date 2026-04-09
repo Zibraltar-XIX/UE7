@@ -88,6 +88,8 @@ jobs:
     needs: grype
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - run: docker compose up -d --build
       - uses: thereisnotime/action-nikto@master
         with:
           url: "http://localhost:80"
