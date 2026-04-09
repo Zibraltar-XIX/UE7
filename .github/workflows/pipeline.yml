@@ -64,13 +64,16 @@ jobs:
         run: pip-audit -r ./python/requirements.txt
 
   build:
-    name: build docker image
+    name: build image
     runs-on: ubuntu-latest
     needs: pip-audit
     steps:
       - uses: actions/checkout@v6
-      - name: Build Docker Image
+      - name: build image
         run: docker build -t ue7-app:latest -f ./app/Dockerfile .
+
+      - name: lancer app
+        run: docker run -d -p 80:5000 --name ue7-app ue7-app:latest
 
   grype:
     name: scan grype
