@@ -1,7 +1,5 @@
 FROM python:3.14-slim
 
-RUN apk update && apk upgrade --no-cache
-
 WORKDIR /app
 
 COPY ./python/requirements.txt .
