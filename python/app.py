@@ -22,7 +22,7 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
 csrf = CSRFProtect(app)
 
-
+# Injecte une variable "is_logged_in" pour HTML
 @app.context_processor
 def inject_auth_state():
     return {"is_logged_in": bool(session.get("user_id"))}
@@ -30,8 +30,8 @@ def inject_auth_state():
 
 ALLOWED_UPLOAD_EXTENSIONS = {
     "profile_pic": {"jpg", "jpeg", "png", "webp"},
-    "cv": {"pdf"},
-    "lettre": {"pdf"},
+    "cv": {"pdf", "docx", "png", "jpg", "jpeg"},
+    "lettre": {"pdf", "docx", "png", "jpg", "jpeg"},
 }
 
 UPLOAD_ERROR_MESSAGES = {
@@ -397,13 +397,9 @@ def src_file(filename):
     return send_from_directory(os.path.join(SITE_DIR, 'src'), filename)
 
 
-@app.route('/', methods=['GET', 'POST'])
-@csrf.exempt
+@app.route('/', methods=['GET'])
 def home():
-    if request.method == 'GET':
-        return render_template('home.html')
-    elif request.method == 'POST':
-        return "<h1>Perdu ?</h1>"
+    return render_template('home.html')
 
 
 @app.route('/profil', methods=['POST', 'GET'])
@@ -702,13 +698,13 @@ def recherche():
         total_resultats=len(profils) + len(annonces),
     )
 
-
+# Déconnexion
 @app.route('/logout')
-@csrf.exempt
 def logout():
     session.clear()
     return redirect('/')
 
+# Sécuriser les requêtes Flask
 @app.after_request
 def add_security_headers(response):
     response.headers['Content-Security-Policy'] = (
@@ -723,5 +719,6 @@ def add_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
 
+# Lancer Flask
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=False)
