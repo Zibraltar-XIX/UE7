@@ -89,4 +89,4 @@ jobs:
     steps:
       - uses: thereisnotime/action-nikto@master
         with:
-          url: "http://localhost:5000"
+          url: "http://localhost:80"
