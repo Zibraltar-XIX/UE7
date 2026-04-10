@@ -90,6 +90,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker compose up -d --build
+
+      - name: check le run de l'app
+        run: curl -I http://127.0.0.1:80
       - uses: thereisnotime/action-nikto@master
         with:
           url: "http://127.0.0.1:80"
