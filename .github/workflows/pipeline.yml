@@ -95,7 +95,7 @@ jobs:
         run: docker ps -a
 
       - name: check le run de l'app
-        run: curl -v http://localhost:80
+        run: curl -v http://127.0.0.1:80
 
       - name: logs app web
         if: always()
@@ -115,4 +115,4 @@ jobs:
 
       - uses: thereisnotime/action-nikto@master
         with:
-          url: "http://localhost:80"
+          url: "http://127.0.0.1:80"
