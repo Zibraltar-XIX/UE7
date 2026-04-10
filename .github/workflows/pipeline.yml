@@ -97,6 +97,18 @@ jobs:
       - name: check le run de l'app
         run: curl -v http://localhost:80
 
+      - name: logs app web
+        if: always()
+        run: docker compose logs --no-color web-app
+
+      - name: logs db
+        if: always()
+        run: docker compose logs --no-color db
+
+      - name: inspection app web
+        if: always()
+        run: docker inspect ue7-web-app-1 --format='{{.RestartCount}}'
+
       - name: docker log pour erreur
         if: always()
         run: docker compose logs --no-color
