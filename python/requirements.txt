@@ -15,3 +15,4 @@ charset-normalizer==3.4.6
 idna==3.11
 urllib3==2.6.3
 dotenv==0.9.9
+flask_limiter==4.1.1

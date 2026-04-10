@@ -7,13 +7,16 @@ WORKDIR /app
 # Copier les fichiers de l'app dans le conteneur
 COPY ./site ./site
 COPY ./python ./python
-COPY .env ./.env
 
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -r ./python/requirements.txt
 
 # Exposer le port de l'application
 EXPOSE 5000
+
+# Utiliser un utilisateur non root
+RUN useradd app
+USER app
 
 # Lancer l'application
 CMD ["python", "./python/app.py"]
