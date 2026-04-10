@@ -92,6 +92,7 @@ jobs:
           MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
           SECRET_KEY=${{ secrets.SECRET_KEY }}
+          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
           EOF
       
       - run: docker compose up -d --build
