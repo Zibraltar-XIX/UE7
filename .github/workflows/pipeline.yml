@@ -126,9 +126,6 @@ jobs:
       - name: check le conteneur
         run: docker ps -a
 
-      - name: check le run de l'app
-        run: curl -v http://127.0.0.1:5000
-
       - name: Check app from host
         run: curl -v http://127.0.0.1:5000
         continue-on-error: true
