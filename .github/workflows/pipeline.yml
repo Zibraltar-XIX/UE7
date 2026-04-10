@@ -31,7 +31,7 @@ jobs:
           fetch-depth: 0
       - uses: gitleaks/gitleaks-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.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 }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   sast-bandit:
     name: bandit
