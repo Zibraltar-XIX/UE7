@@ -5,7 +5,7 @@ services:
       dockerfile: ./app/Dockerfile
     restart: always
     env_file:
-      - .env
+      - .env.exemple
     ports:
       - "80:5000"
     depends_on:
@@ -21,7 +21,7 @@ services:
     image: mysql:9.6
     restart: always
     env_file:
-      - .env
+      - .env.exemple
     ports:
       - "3306:3306"
     volumes:
