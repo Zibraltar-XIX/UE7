@@ -92,4 +92,4 @@ jobs:
       - run: docker compose up -d --build
       - uses: thereisnotime/action-nikto@master
         with:
-          url: "http://localhost:80"
+          url: "http://127.0.0.1:80"
