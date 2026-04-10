@@ -81,7 +81,7 @@ jobs:
       - name: Install Grype
         run: curl -sSfL https://get.anchore.io/grype | sudo sh -s -- -b /usr/local/bin
       - name: Scan Docker Image with Grype
-        run: grype ./app
+        run: grype ue7-app:latest
 
   nikto:
     name: scan nikto
@@ -95,7 +95,7 @@ jobs:
         run: docker ps -a
 
       - name: check le run de l'app
-        run: curl -v http://127.0.0.1:80
+        run: curl -v http://127.0.0.1:5000
 
       - name: Curl inside web container
         run: docker exec ue7-web-app-1 python - <<'PY'
@@ -123,4 +123,4 @@ jobs:
 
       - uses: thereisnotime/action-nikto@master
         with:
-          url: "http://127.0.0.1:80"
+          url: "http://127.0.0.1:5000"
