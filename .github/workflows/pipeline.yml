@@ -126,10 +126,6 @@ jobs:
       - name: check le conteneur
         run: docker ps -a
 
-      - name: Check app from host
-        run: curl -v http://127.0.0.1:5000
-        continue-on-error: true
-
       - name: Curl inside web container
         run: |
           docker exec ue7-web-app-1 python - <<'PY'
@@ -138,7 +134,6 @@ jobs:
           print(r.status)
           print(r.read(200))
           PY
-        continue-on-error: true
 
       - name: logs app web
         if: always()
