@@ -100,7 +100,9 @@ jobs:
       - name: Curl inside web container
         run: docker exec ue7-web-app-1 python - <<'PY'
           import urllib.request
-          print(urllib.request.urlopen("http://127.0.0.1:5000/").status)
+          r = urllib.request.urlopen("http://127.0.0.1:5000/", timeout=5)
+          print(r.status)
+          print(r.read(200))
           PY
 
       - name: logs app web
