@@ -63,26 +63,10 @@ jobs:
       - name: run pip-audit
         run: pip-audit -r ./python/requirements.txt
 
-  creationenv:
-    name: create env
-    runs-on: ubuntu-latest
-    needs: pip-audit
-    steps:
-      - uses: actions/checkout@v4
-      - name: create .env file
-        run: |
-          cat <<EOF > .env
-          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-          MYSQL_USER=${{ secrets.MYSQL_USER }}
-          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-          MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-          SECRET_KEY=${{ secrets.SECRET_KEY }}
-          EOF
-
   buildetscan:
     name: build image
     runs-on: ubuntu-latest
-    needs: creationenv
+    needs: pip-audit
     steps:
       - uses: actions/checkout@v4
       - name: build image
@@ -92,17 +76,6 @@ jobs:
         run: curl -sSfL https://get.anchore.io/grype | sudo sh -s -- -b /usr/local/bin
       - name: Scan Docker Image with Grype
         run: grype ue7-app:latest
-
-  # grype:
-  #   name: scan grype
-  #   runs-on: ubuntu-latest
-  #   needs: buildetscan
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Install Grype
-  #       run: curl -sSfL https://get.anchore.io/grype | sudo sh -s -- -b /usr/local/bin
-  #     - name: Scan Docker Image with Grype
-  #       run: grype ue7-app:latest
 
   nikto:
     name: scan nikto
