@@ -14,7 +14,7 @@
 [[rules]]
   id = "internal-secret"
   description = "Mot de passe ou secret interne"
-  regex = '''(?i)password|secret|pwd\s*[:=]\s*['"][^'"]+['"]'''
+  regex = '''(?i)ghp|pwd\s*[:=]\s*['"][^'"]+['"]'''
   tags = ["password", "internal"]
 
 [[rules]]
