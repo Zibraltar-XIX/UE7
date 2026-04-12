@@ -1,19 +1,20 @@
 import os, mysql.connector
-from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, redirect, session, flash
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
-from flask_wtf import FlaskForm, CSRFProtect
-from wtforms import StringField, SelectField, SubmitField
-from wtforms.validators import Optional
+from flask_wtf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+
+
+############################################
+########## Configuration de Flask ##########
+############################################
 
 # Definition des chemins absolus
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SITE_DIR = os.path.join(BASE_DIR, "site")
 
-# Configuration de Flask
 app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_folder=SITE_DIR, static_url_path='/site')
 app.jinja_env.autoescape = True # Corrige XSS des tempates Jinja
 app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
@@ -24,6 +25,11 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
 csrf = CSRFProtect(app)
 limiter = Limiter(get_remote_address, app=app, storage_uri="memory://")
+
+
+#####################################
+########## Def utilitaires ##########
+#####################################
 
 # Injecte une variable "is_logged_in" pour HTML
 @app.context_processor
@@ -62,239 +68,6 @@ def save_upload(field_name, category, user_id):
     file.save(save_path)
 
     return f'/uploads/{category}/{filename}'
-
-
-class RechercheForm(FlaskForm):
-    q = StringField("Rechercher", validators=[Optional()])
-    contrat = SelectField(
-        "Contrat",
-        choices=[("", "Tous"), ("alternance", "Alternance"), ("stage", "Stage")],
-        validators=[Optional()],
-    )
-    domaine = SelectField(
-        "Domaine",
-        choices=[("", "Tous"), ("dev", "Dev"), ("design", "Design"), ("data", "Data"), ("marketing", "Marketing"), ("business", "Business")],
-        validators=[Optional()],
-    )
-    tri = SelectField(
-        "Trier par",
-        choices=[("recent", "Plus recents"), ("alpha", "A a Z"), ("dispo", "Disponibles en premier")],
-        default="recent",
-    )
-    submit = SubmitField("Rechercher")
-
-
-RECHERCHE_DOMAINES = {
-    "dev": ("dev", "develop", "informatique", "logiciel", "backend", "frontend", "fullstack", "web", "python"),
-    "design": ("design", "ui", "ux", "graph", "figma", "maquette", "creatif"),
-    "data": ("data", "analyse", "analyst", "sql", "bi", "machine learning", "ia"),
-    "marketing": ("marketing", "seo", "communication", "contenu", "social media", "acquisition"),
-    "business": ("business", "commercial", "vente", "partenariat", "commerce", "account"),
-}
-
-
-# Convertir path en utf8
-def to_str(val):
-    if isinstance(val, (bytes, bytearray)):
-        return val.decode('utf-8')
-    return val or ''
-
-
-def _search_value(value):
-    return to_str(value).strip().lower()
-
-
-def _search_blob(*values):
-    return " ".join(part for part in (_search_value(value) for value in values) if part)
-
-
-def _guess_contract(*values):
-    text = _search_blob(*values)
-    if "alternance" in text:
-        return "alternance"
-    if "stage" in text:
-        return "stage"
-    return ""
-
-
-def _matches_query(values, query):
-    if not query:
-        return True
-    return query in _search_blob(*values)
-
-
-def _matches_contract(contract, selected_contract):
-    if not selected_contract:
-        return True
-    return _search_value(contract) == selected_contract
-
-
-def _matches_domaine(values, domaine):
-    if not domaine:
-        return True
-
-    keywords = RECHERCHE_DOMAINES.get(domaine, ())
-    if not keywords:
-        return True
-
-    text = _search_blob(*values)
-    return any(keyword in text for keyword in keywords)
-
-
-def _load_profils_recherche(cursor):
-    cursor.execute(
-        """
-        SELECT
-            id,
-            Prenom AS prenom,
-            Nom AS nom,
-            Role AS role,
-            Adresse AS adresse,
-            Competences AS competences,
-            Emplois AS emplois,
-            Description AS description
-        FROM Utilisateurs
-        """
-    )
-
-    profils = []
-    for row in cursor.fetchall():
-        profils.append(
-            {
-                "id": row.get("id"),
-                "prenom": to_str(row.get("prenom")).strip(),
-                "nom": to_str(row.get("nom")).strip(),
-                "role": to_str(row.get("role")).strip(),
-                "adresse": to_str(row.get("adresse")).strip(),
-                "competences": to_str(row.get("competences")).strip(),
-                "emplois": to_str(row.get("emplois")).strip(),
-                "description": to_str(row.get("description")).strip(),
-                "contrat": _guess_contract(row.get("emplois"), row.get("description")),
-            }
-        )
-
-    return profils
-
-
-def _load_annonces_recherche(cursor):
-    cursor.execute(
-        """
-        SELECT
-            Annonce.id,
-            Annonce.Titre AS titre,
-            Annonce.Description AS description,
-            Annonce.Contrat AS contrat,
-            Utilisateurs.Prenom AS prenom,
-            Utilisateurs.Nom AS nom,
-            Utilisateurs.Role AS role
-        FROM Annonce
-        LEFT JOIN Utilisateurs ON Utilisateurs.id = Annonce.id_Utilisateur
-        """
-    )
-
-    annonces = []
-    for row in cursor.fetchall():
-        prenom = to_str(row.get("prenom")).strip()
-        nom = to_str(row.get("nom")).strip()
-        auteur = f"{prenom} {nom}".strip()
-
-        annonces.append(
-            {
-                "id": row.get("id"),
-                "titre": to_str(row.get("titre")).strip(),
-                "description": to_str(row.get("description")).strip(),
-                "contrat": _search_value(row.get("contrat")),
-                "auteur": auteur,
-                "role": to_str(row.get("role")).strip(),
-            }
-        )
-
-    return annonces
-
-
-def _filter_profils_recherche(profils, query, contrat, domaine):
-    resultats = []
-
-    for profil in profils:
-        if not _matches_query(
-            (
-                profil.get("prenom"),
-                profil.get("nom"),
-                profil.get("role"),
-                profil.get("adresse"),
-                profil.get("competences"),
-                profil.get("emplois"),
-                profil.get("description"),
-            ),
-            query,
-        ):
-            continue
-
-        if not _matches_contract(profil.get("contrat"), contrat):
-            continue
-
-        if not _matches_domaine(
-            (
-                profil.get("role"),
-                profil.get("competences"),
-                profil.get("emplois"),
-                profil.get("description"),
-            ),
-            domaine,
-        ):
-            continue
-
-        resultats.append(profil)
-
-    return resultats
-
-
-def _filter_annonces_recherche(annonces, query, contrat, domaine):
-    resultats = []
-
-    for annonce in annonces:
-        if not _matches_query(
-            (
-                annonce.get("titre"),
-                annonce.get("description"),
-                annonce.get("contrat"),
-                annonce.get("auteur"),
-                annonce.get("role"),
-            ),
-            query,
-        ):
-            continue
-
-        if not _matches_contract(annonce.get("contrat"), contrat):
-            continue
-
-        if not _matches_domaine(
-            (
-                annonce.get("titre"),
-                annonce.get("description"),
-                annonce.get("role"),
-            ),
-            domaine,
-        ):
-            continue
-
-        resultats.append(annonce)
-
-    return resultats
-
-
-def _sort_profils_recherche(profils, tri):
-    if tri == "alpha":
-        return sorted(profils, key=lambda profil: _search_blob(profil.get("nom"), profil.get("prenom"), profil.get("role")))
-
-    return sorted(profils, key=lambda profil: profil.get("id") or 0, reverse=True)
-
-
-def _sort_annonces_recherche(annonces, tri):
-    if tri == "alpha":
-        return sorted(annonces, key=lambda annonce: _search_blob(annonce.get("titre"), annonce.get("auteur")))
-
-    return sorted(annonces, key=lambda annonce: annonce.get("id") or 0, reverse=True)
 
 
 ###########################################
@@ -538,7 +311,7 @@ def register():
     session['user_id'] = user_id
     return redirect('/profil')
 
-
+# Route de la page "post"
 @app.route("/post", methods=["GET", "POST"])
 def publication():
     # Vérifie si l'utilisateur est bien logger
@@ -573,49 +346,52 @@ def publication():
 
     return render_template("publication.html")
 
-
+# Route de la page "recherche"
 @app.route("/recherche", methods=["GET", "POST"])
 def recherche():
-    form = RechercheForm()
+    # Si la requète est GET
+    if request.method == "GET":
+        return render_template("recherche.html", profils=[], annonces=[])
+
+    # Définition des variables
     profils = []
     annonces = []
-    db = None
-    cursor = None
+    keywords = request.form.get('recherche').split()
+    contrat = request.form.get('contrat')
+    conditions_annonces = []
+    params_annonces = []
+    conditions_profils = []
+    params_profils = []
 
-    try:
-        db = db_connection()
-        cursor = db.cursor(dictionary=True)
-        profils = _load_profils_recherche(cursor)
-        annonces = _load_annonces_recherche(cursor)
-    except Exception as error:
-        print(f"Recherche error: {error}")
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if db is not None:
-            db.close()
+    if keywords :
+        # Connexion à la DB
+        conn = db_connection()
+        cursor = conn.cursor(dictionary=True)
 
-    tri = form.tri.data or "recent"
+        # Recherche des annonces
+        if contrat:
+            conditions_annonces.append("Contrat = %s")
+            params_annonces.append(contrat)
+        for word in keywords:
+            conditions_annonces.append("(Titre LIKE %s OR Description LIKE %s)")
+            params_annonces.extend([f"%{word}%", f"%{word}%"])
+        query = "SELECT * FROM Annonce"
+        if conditions_annonces:
+            query += " WHERE " + " AND ".join(conditions_annonces)
+        cursor.execute(query, tuple(params_annonces))
+        annonces = cursor.fetchall()
 
-    if form.validate_on_submit():
-        recherche_texte = _search_value(form.q.data)
-        contrat = _search_value(form.contrat.data)
-        domaine = _search_value(form.domaine.data)
-        tri = form.tri.data or "recent"
+        # Recherche des profils
+        for word in keywords:
+            conditions_profils.append("(Nom LIKE %s OR Prenom LIKE %s)")
+            params_profils.extend([f"%{word}%", f"%{word}%"])
+        query = f"SELECT * FROM Utilisateurs WHERE {' AND '.join(conditions_profils)}"
+        cursor.execute(query, tuple(params_profils))
+        profils = cursor.fetchall()
 
-        profils = _filter_profils_recherche(profils, recherche_texte, contrat, domaine)
-        annonces = _filter_annonces_recherche(annonces, recherche_texte, contrat, domaine)
 
-    profils = _sort_profils_recherche(profils, tri)
-    annonces = _sort_annonces_recherche(annonces, tri)
+    return render_template("recherche.html", profils=profils, annonces=annonces)
 
-    return render_template(
-        "recherche.html",
-        form=form,
-        profils=profils,
-        annonces=annonces,
-        total_resultats=len(profils) + len(annonces),
-    )
 
 # Déconnexion
 @app.route('/logout')
