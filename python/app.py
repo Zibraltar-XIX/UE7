@@ -412,6 +412,34 @@ def info():
     }
     return jsonify({"App": app_info, "System": system_info})
 
+# Route pour vérifier l'état de l'app
+@app.route("/health", methods=["GET"])
+def health():
+    app.logger.info("Appel de l'endpoint /health")
+    # Vérification que l'application fonctionne
+    try:
+        # Vérification que la DB est accessible
+        conn = db_connection()
+        if conn.is_connected():
+            conn.close()
+            return jsonify({
+                "status": "success",
+                "message": "L'application et la DB fonctionnent correctement"
+            }), 200
+        else:
+            app.logger.warning("L'application fonctionne mais pas la DB")
+            return jsonify({
+                "status": "fail",
+                "message": "Erreur de connexion a la base de donnees"
+            }), 500
+
+    except Exception as e:
+        app.logger.error(f"Erreur lors du healthcheck : {e}")
+        return jsonify({
+            "status": "fail",
+            "message": "Erreur interne du serveur lors de la verification"
+        }), 500
+
 # Sécuriser les requêtes Flask
 @app.after_request
 def add_security_headers(response):
