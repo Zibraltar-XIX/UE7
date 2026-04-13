@@ -1,13 +1,13 @@
 name: pipeline
 on:
   push:
-    branches: [main, develop]
-    paths:
-      - '**/*.py'
+    # branches: [main, develop]
+    # paths:
+    #   - '**/*.py'
   pull_request:
-    branches: [main, develop]
-    paths:
-      - '**/*.py'
+    # branches: [main, develop]
+    # paths:
+    #   - '**/*.py'
   workflow_dispatch:
 jobs:
 
@@ -45,7 +45,7 @@ jobs:
       - name: install semgrep
         run: python3 -m pip install semgrep
       - name: run semgrep
-        run: semgrep --config=auto .
+        run: semgrep --config .semgrep/custom-rules.yml --error .
 
       #pip-audit :
       - name: install pip-audit
