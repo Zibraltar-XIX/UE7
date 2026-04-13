@@ -104,6 +104,10 @@ jobs:
         if: always()
         run: docker compose logs --no-color
 
+      - name: run docker image
+        if: always()
+        run: docker run -it -p 5000:5000 ue7-app:latest
+
       - uses: thereisnotime/action-nikto@master
         with:
           url: "http://127.0.0.1:5000"
