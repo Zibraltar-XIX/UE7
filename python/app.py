@@ -1,4 +1,4 @@
-import os, mysql.connector
+import os, mysql.connector, platform
 from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, redirect, session, flash
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -397,7 +397,22 @@ def logout():
     session.clear()
     return redirect('/')
 
+# Route pour avoir les infos de l'app
+@app.route("/info", methods=["GET"])
+def info():
+    app_info = {
+        "Application name": os.getenv("APP_NAME", "unknown"),
+        "Application version": os.getenv("VERSION", "unknown"),
+        "Application mode": os.getenv("APP_MODE", "unknown"),
+        "Application port": os.getenv("PORT", "unknown"),
+    }
+    system_info = {
+        "Python version": platform.python_version(),
+        "Hostname": platform.node(),
+    }
+    return jsonify({"App": app_info, "System": system_info})
 
+# Sécuriser les requêtes Flask
 @app.after_request
 def add_security_headers(response):
     response.headers['Content-Security-Policy'] = (
