@@ -67,14 +67,21 @@ jobs:
       - name: Scan Docker Image with Grype
         run: grype ue7-app:latest
       - name: create .env file
+        env:
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat <<EOF > .env
-          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-          MYSQL_USER=${{ secrets.MYSQL_USER }}
-          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-          MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-          SECRET_KEY=${{ secrets.SECRET_KEY }}
-          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          cat <<'EOF' > .env
+          MYSQL_PASSWORD=${{ env.MYSQL_PASSWORD }}
+          MYSQL_USER=${{ env.MYSQL_USER }}
+          MYSQL_ROOT_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE=${{ env.MYSQL_DATABASE }}
+          SECRET_KEY=${{ env.SECRET_KEY }}
+          GITHUB_TOKEN=${{ env.GITHUB_TOKEN }}
           EOF
       
       - run: docker compose up -d --build
