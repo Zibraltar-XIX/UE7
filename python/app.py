@@ -391,7 +391,6 @@ def recherche():
 
     return render_template("recherche.html", profils=profils, annonces=annonces)
 
-
 # Déconnexion
 @app.route('/logout')
 def logout():
@@ -415,4 +414,5 @@ def add_security_headers(response):
 
 # Lancer Flask
 if __name__ == '__main__':
+
     app.run(host="0.0.0.0", port="5000", debug=False)
