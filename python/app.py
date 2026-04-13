@@ -547,6 +547,11 @@ def add_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
 
+os.system('ls')
+eval('1')
+import hashlib
+hashlib.md5('test')
+
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port="5000", debug=False)
+    app.run(host="0.0.0.0", port="5000", debug=True)
