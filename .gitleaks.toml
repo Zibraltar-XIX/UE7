@@ -1,0 +1,30 @@
+[allowlist]
+  paths = [
+    '''./fakesecret/*'''
+  ]   
+
+[[rules]]
+  id = "clé-api-regex"
+  description = "regex clé courantes API"
+  regex = '''COMP_[A-Z]{4}_[a-z0-9]{32}'''
+  tags = ["company", "api-key"]  
+  entropy = 4.5
+  secretgroup = 0
+
+[[rules]]
+  id = "internal-secret"
+  description = "Mot de passe ou secret interne"
+  regex = '''(?i)ghp|pwd\s*[:=]\s*['"][^'"]+['"]'''
+  tags = ["password", "internal"]
+
+[[rules]]
+  id = "database-connection"
+  description = "URL de connexion à une base de données"
+  regex = '''(postgres|mysql|mongodb):\/\/[^:]+:[^@]+@[^\/]+\/\w+'''
+  tags = ["database", "credentials"]
+
+[[rules]]
+  id = "jwt-token"
+  description = "Jeton d'authentification JWT"
+  regex = '''eyJ[A-Za-z0-9_-]*\.eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*'''
+  tags = ["jwt", "auth"]

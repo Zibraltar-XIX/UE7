@@ -2,12 +2,12 @@ services:
   web-app:
     build:
       context: .
-      dockerfile: app/Dockerfile
+      dockerfile: ./app/Dockerfile
     restart: always
     env_file:
       - .env
     ports:
-        - "80:5000"
+      - "5000:5000"
     depends_on:
       - db
     cap_drop:
@@ -23,7 +23,7 @@ services:
     env_file:
       - .env
     ports:
-        - "3306:3306"
+      - "3306:3306"
     volumes:
       - ./mysql_data:/var/lib/mysql
       - ./init:/docker-entrypoint-initdb.d
