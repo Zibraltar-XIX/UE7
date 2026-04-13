@@ -1,17 +1,17 @@
 name: pipeline
 on:
   push:
-    # branches:
-    #   - main
-    #   - develop
-    # paths:
-    #   - '**/*.py'
+    branches:
+      - main
+      - develop
+    paths:
+      - '**/*.py'
   pull_request:
-    # branches:
-    #   - main
-    #   - develop
-    # paths:
-    #   - '**/*.py'
+    branches:
+      - main
+      - develop
+    paths:
+      - '**/*.py'
   workflow_dispatch:
 jobs:
 
@@ -33,7 +33,7 @@ jobs:
           ignore: "E501,E401,W291,W293,E128,E266,E302,E203,E303"
           max-line-length: "100"
           path: "./python/app.py"
-          
+
 
       #gitleaks :
       - uses: gitleaks/gitleaks-action@v2
