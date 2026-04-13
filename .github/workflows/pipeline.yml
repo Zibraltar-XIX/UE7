@@ -1,9 +1,15 @@
 name: pipeline
 on:
   push:
+    branches:
+      - main
+      - develop
     paths:
       - '**/*.py'
   pull_request:
+    branches:
+      - main
+      - develop
     paths:
       - '**/*.py'
   workflow_dispatch:
@@ -57,13 +63,7 @@ jobs:
     needs: security-test
     steps:
       - uses: actions/checkout@v4
-      - name: build image
-        run: docker build -t ue7-app:latest -f ./app/Dockerfile .
 
-      - name: Install Grype
-        run: curl -sSfL https://get.anchore.io/grype | sudo sh -s -- -b /usr/local/bin
-      - name: Scan Docker Image with Grype
-        run: grype ue7-app:latest
       - name: create .env file
         env:
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
@@ -81,6 +81,13 @@ jobs:
           SECRET_KEY=${{ env.SECRET_KEY }}
           GITHUB_TOKEN=${{ env.GITHUB_TOKEN }}
           EOF
+      - name: build image
+        run: docker build -t ue7-app:latest -f ./app/Dockerfile .
+
+      - name: Install Grype
+        run: curl -sSfL https://get.anchore.io/grype | sudo sh -s -- -b /usr/local/bin
+      - name: Scan Docker Image with Grype
+        run: grype ue7-app:latest
       
       - run: docker compose up -d --build
       - name: check le conteneur
