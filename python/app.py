@@ -1,4 +1,4 @@
-import os, mysql.connector
+import os, mysql.connector, platform
 from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, redirect, session, flash
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -397,7 +397,50 @@ def logout():
     session.clear()
     return redirect('/')
 
+# Route pour avoir les infos de l'app
+@app.route("/info", methods=["GET"])
+def info():
+    app_info = {
+        "Application name": os.getenv("APP_NAME", "unknown"),
+        "Application version": os.getenv("VERSION", "unknown"),
+        "Application mode": os.getenv("APP_MODE", "unknown"),
+        "Application port": os.getenv("PORT", "unknown"),
+    }
+    system_info = {
+        "Python version": platform.python_version(),
+        "Hostname": platform.node(),
+    }
+    return jsonify({"App": app_info, "System": system_info})
 
+# Route pour vérifier l'état de l'app
+@app.route("/health", methods=["GET"])
+def health():
+    app.logger.info("Appel de l'endpoint /health")
+    # Vérification que l'application fonctionne
+    try:
+        # Vérification que la DB est accessible
+        conn = db_connection()
+        if conn.is_connected():
+            conn.close()
+            return jsonify({
+                "status": "success",
+                "message": "L'application et la DB fonctionnent correctement"
+            }), 200
+        else:
+            app.logger.warning("L'application fonctionne mais pas la DB")
+            return jsonify({
+                "status": "fail",
+                "message": "Erreur de connexion a la base de donnees"
+            }), 500
+
+    except Exception as e:
+        app.logger.error(f"Erreur lors du healthcheck : {e}")
+        return jsonify({
+            "status": "fail",
+            "message": "Erreur interne du serveur lors de la verification"
+        }), 500
+
+# Sécuriser les requêtes Flask
 @app.after_request
 def add_security_headers(response):
     response.headers['Content-Security-Policy'] = (
