@@ -119,8 +119,7 @@ def profil():
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM Utilisateurs WHERE id = %s", (user_id,))
     row = cursor.fetchone()
-    cursor.close()
-    conn.close()
+    
 
     # Si le user id est erroné, on le déconnecte
     if row is None:
@@ -392,14 +391,13 @@ def recherche():
 
     return render_template("recherche.html", profils=profils, annonces=annonces)
 
-
 # Déconnexion
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/')
 
-# Sécuriser les requêtes Flask
+
 @app.after_request
 def add_security_headers(response):
     response.headers['Content-Security-Policy'] = (
@@ -414,6 +412,6 @@ def add_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
 
-# Lancer Flask
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port="5000", debug=False)

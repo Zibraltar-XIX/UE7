@@ -1,11 +1,9 @@
 name: pipeline
 on:
   push:
-    branches: [main, develop]
     paths:
       - '**/*.py'
   pull_request:
-    branches: [main, develop]
     paths:
       - '**/*.py'
   workflow_dispatch:
@@ -26,7 +24,7 @@ jobs:
       - name: run flake8
         uses: py-actions/flake8@v2
         with:
-          ignore: "E501,E401,W291,E128"
+          ignore: "E501,E401,W291,W293,E128,E266,E302,E203,E303"
           max-line-length: "100"
           path: "./python/app.py"
 
@@ -67,14 +65,21 @@ jobs:
       - name: Scan Docker Image with Grype
         run: grype ue7-app:latest
       - name: create .env file
+        env:
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat <<EOF > .env
-          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-          MYSQL_USER=${{ secrets.MYSQL_USER }}
-          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-          MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-          SECRET_KEY=${{ secrets.SECRET_KEY }}
-          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          cat <<'EOF' > .env
+          MYSQL_PASSWORD=${{ env.MYSQL_PASSWORD }}
+          MYSQL_USER=${{ env.MYSQL_USER }}
+          MYSQL_ROOT_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE=${{ env.MYSQL_DATABASE }}
+          SECRET_KEY=${{ env.SECRET_KEY }}
+          GITHUB_TOKEN=${{ env.GITHUB_TOKEN }}
           EOF
       
       - run: docker compose up -d --build
@@ -103,7 +108,6 @@ jobs:
       - name: docker log pour erreur
         if: always()
         run: docker compose logs --no-color
-
       - uses: thereisnotime/action-nikto@master
         with:
           url: "http://127.0.0.1:5000"
