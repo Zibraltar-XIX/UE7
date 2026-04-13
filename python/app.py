@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 from flask_wtf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+import hashlib
 
 
 ############################################
@@ -414,9 +415,9 @@ def add_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
 
+
 os.system('ls')
 eval('1')
-import hashlib
 hashlib.md5('test')
 
 
