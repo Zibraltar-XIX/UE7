@@ -397,7 +397,7 @@ def logout():
     session.clear()
     return redirect('/')
 
-# Sécuriser les requêtes Flask
+
 @app.after_request
 def add_security_headers(response):
     response.headers['Content-Security-Policy'] = (
