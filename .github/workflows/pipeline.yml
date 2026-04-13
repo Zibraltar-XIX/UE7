@@ -1,17 +1,17 @@
 name: pipeline
 on:
   push:
-    branches:
-      - main
-      - develop
-    paths:
-      - '**/*.py'
+    # branches:
+    #   - main
+    #   - develop
+    # paths:
+    #   - '**/*.py'
   pull_request:
-    branches:
-      - main
-      - develop
-    paths:
-      - '**/*.py'
+    # branches:
+    #   - main
+    #   - develop
+    # paths:
+    #   - '**/*.py'
   workflow_dispatch:
 jobs:
 
