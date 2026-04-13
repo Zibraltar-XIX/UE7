@@ -1,0 +1,12 @@
+.git
+.gitignore
+.env
+.env.*
+.idea
+mysql_data
+fakesecret
+app
+docker-compose*.yml
+publish.bat
+update.sh
+**/__pycache__
