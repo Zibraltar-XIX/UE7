@@ -416,6 +416,7 @@ def profil():
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM Utilisateurs WHERE id = %s", (user_id,))
     row = cursor.fetchone()
+    
 
     if row is None:
         cursor.close()
