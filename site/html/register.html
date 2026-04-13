@@ -2,113 +2,143 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Inscription</title>
-    <link rel="stylesheet" href="../css/register.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alternance tah les fous</title>
     <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/register.css">
     <link rel="icon" href="../src/logo tah les fous.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
-<div class="box_inscription">
-    <div class="register_illustration">
-        <img src="../src/register-illustration.png" alt="register_illustration">
-    </div>
-    <div class="section_input">
-        <h1>Inscription</h1>
+<nav>
+    {% if is_logged_in %}
+    <a href="/">Accueil</a>
+    <a href="/recherche">Recherche</a>
+    <a href="/post">Poster</a>
+    <a href="/profil">Profil</a>
+    <a href="/logout">Déconnexion</a>
+    {% else %}
+    <a href="/">Accueil</a>
+    <a href="/recherche">Recherche</a>
+    <a href="/login">Connexion</a>
+    <a href="/register">Inscription</a>
+    {% endif %}
+</nav>
+<section class="page">
+    <div class="box_inscription">
+        <div class="register_illustration">
+            <img src="../src/register-illustration.png" alt="register_illustration">
+        </div>
+        <div class="section_input">
+            <h1>Inscription</h1>
 
-        <form id="formulaire_inscription" action="/register" method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <form id="formulaire_inscription" action="/register" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <div class="selection_formualire">
-                <label>Je suis :</label>
+                <div class="selection_formualire">
+                    <label>Je suis :</label>
+                    <div class="selection_input">
+                        <label>
+                            <input type="radio" name="user_type" value="student" checked onclick="toggleField('student')">
+                            Étudiant
+                        </label>
+                        <label>
+                            <input type="radio" name="user_type" value="company" onclick="toggleField('company')">
+                            Entreprise
+                        </label>
+                    </div>
+                </div>
+
                 <div class="selection_input">
-                    <label>
-                        <input type="radio" name="user_type" value="student" checked onclick="toggleField('student')">
-                        Étudiant
-                    </label>
-                    <label>
-                        <input type="radio" name="user_type" value="company" onclick="toggleField('company')">
-                        Entreprise
-                    </label>
+                    <div class="input_group">
+                        <label for="nom">Nom</label>
+                        <input type="text" id="nom" name="nom" required>
+                    </div>
+                    <div class="input_group">
+                        <label for="prenom">Prénom</label>
+                        <input type="text" class="input" name="prenom" required>
+                    </div>
                 </div>
-            </div>
 
-            <div class="selection_input">
-                <div class="input_group">
-                    <label for="nom">Nom</label>
-                    <input type="text" id="nom" name="nom" required>
+                <div class="selection_input">
+                    <div class="input_group">
+                        <label for="email">Email</label>
+                        <input type="email" class="input" name="email" required>
+                    </div>
+                    <div class="input_group">
+                        <label for="numero">Numéro de téléphone</label>
+                        <input type="tel" class="input" id="numero" name="numero" required>
+                    </div>
                 </div>
-                <div class="input_group">
-                    <label for="prenom">Prénom</label>
-                    <input type="text" class="input" name="prenom" required>
-                </div>
-            </div>
 
-            <div class="selection_input">
-                <div class="input_group">
-                    <label for="email">Email</label>
-                    <input type="email" class="input" name="email" required>
+                <div class="selection_input">
+                    <div class="input_group">
+                        <label for="dob">Date de naissance</label>
+                        <input type="date" class="input" id="dob" name="dob" required>
+                    </div>
+                    <div class="input_group">
+                        <label for="ecole" id="label_ecole">École</label>
+                        <input type="text" class="input" id="ecole" name="ecole">
+                    </div>
                 </div>
-                <div class="input_group">
-                    <label for="numero">Numéro de téléphone</label>
-                    <input type="tel" class="input" id="numero" name="numero" required>
-                </div>
-            </div>
 
-            <div class="selection_input">
-                <div class="input_group">
-                    <label for="dob">Date de naissance</label>
-                    <input type="date" class="input" id="dob" name="dob" required>
+                <div class="selection_input">
+                    <div class="input_group">
+                        <label for="password">Mot de passe</label>
+                        <input type="password" class="input" id="password" name="password" required>
+                    </div>
+                    <div class="input_group">
+                        <label for="confirm_password">Confirmer mot de passe</label>
+                        <input type="password" class="input" name="confirm_password" required>
+                    </div>
                 </div>
-                <div class="input_group">
-                    <label for="ecole" id="label_ecole">École</label>
-                    <input type="text" class="input" id="ecole" name="ecole">
-                </div>
-            </div>
 
-            <div class="selection_input">
-                <div class="input_group">
-                    <label for="password">Mot de passe</label>
-                    <input type="password" class="input" id="password" name="password" required>
-                </div>
-                <div class="input_group">
-                    <label for="confirm_password">Confirmer mot de passe</label>
-                    <input type="password" class="input" name="confirm_password" required>
-                </div>
-            </div>
+                <div id="message" style="display:none; margin-top:15px;"></div>
 
-            <div id="message" style="display:none; margin-top:15px;"></div>
-
-            <button type="submit">S'inscrire</button>
-        </form>
+                <button type="submit">S'inscrire</button>
+            </form>
+        </div>
     </div>
-</div>
 
-<div class="background">
-    <span></span><span></span><span></span><span></span><span></span>
-    <span></span><span></span><span></span><span></span><span></span>
-    <span></span><span></span><span></span><span></span><span></span>
-    <span></span><span></span><span></span><span></span><span></span>
-    <span></span><span></span><span></span><span></span><span></span>
-    <span></span><span></span>
-</div>
+    <div class="background">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span>
+    </div>
+</section>
+<footer>
+    <div>
+        <h3>Navigation</h3>
+        <a href="/">Accueil</a><br>
+        {% if is_logged_in %}
+        <a href="/profil">Profil</a><br>
+        <a href="/post">Poster</a><br>
+        <a href="/logout">Déconnexion</a><br>
+        {% else %}
+        <a href="/login">Connexion</a><br>
+        <a href="/register">Inscription</a>
+        {% endif %}
+    </div>
+    <div>
+        <h3>Nous suivre</h3>
+        <a href="https://www.facebook.com/alternancetahlesfous">Facebook</a><br>
+        <a href="https://www.instagram.com/alternancetahlesfous/">Instagram</a><br>
+        <a href="https://www.linkedin.com/company/alternance-tah-les-fous/">LinkedIn</a>
+    </div>
+</footer>
+<script src="/site/js/register.js"></script>
 
+{% if error %}
 <script>
-    alert({{error | tojson}});
+    alert({{ error | tojson }});
 </script>
+{% endif %}
 
-<script>
-    function toggleField(type) {
-        const label = document.getElementById('label_ecole');
-        const input = document.getElementById('ecole');
-        if (type === 'company') {
-            label.textContent = "Nom de l'entreprise";
-            input.placeholder = 'Ex: Ma Société SAS';
-        } else {
-            label.textContent = 'École';
-            input.placeholder = '';
-        }
-    }
-</script>
 </body>
 </html>
