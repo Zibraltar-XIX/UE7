@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS `Utilisateurs` (
   `Competences` text,
   `Emplois` text,
   `Description` text,
-  `CV` blob,
-  `PdP` blob,
+  `CV` text,
+  `PdP` text,
   `LM` text
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;
 
