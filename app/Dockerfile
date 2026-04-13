@@ -13,6 +13,9 @@ COPY --chown=app:app ./python ./python
 # Exposer le port de l'app python
 EXPOSE 5000
 
+# Installer les dépendances
+RUN pip install --no-cache-dir -r ./python/requirements.txt
+
 # Utiliser un utilisateur non root
 USER app
 
