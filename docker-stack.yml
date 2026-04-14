@@ -1,0 +1,89 @@
+services:
+  traefik:
+    image: traefik:v3
+    command:
+      - "--providers.swarm=true"
+      - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
+      - "--providers.swarm.exposedbydefault=false"
+      - "--providers.swarm.network=app-network"
+      - "--entrypoints.web.address=:80"
+      - "--api.insecure=true"
+      - "--log.level=INFO"
+    ports:
+      - target: 80
+        published: 80
+        mode: host
+      - target: 8080
+        published: 8080
+        mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - app-network
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+  web-app-1:
+    image: parzivalxix/alternance-tah-les-fous:${APP_VERSION:-3.0}
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - app-network
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 1
+        delay: 2h
+        order: start-first
+        failure_action: rollback
+        monitor: 5m
+      rollback_config:
+        parallelism: 1
+        delay: 30s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.web-app.rule=Host(`alternance-tah-les-fous.fr`, `127.0.0.1`, `localhost`)"
+        - "traefik.http.services.web-app.loadbalancer.healthcheck.path=/health"
+        - "traefik.http.services.web-app.loadbalancer.server.port=5000"
+
+  db:
+    image: mysql:9.6
+    env_file:
+      - .env
+    networks:
+      - app-network
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_NICE
+      - SETGID
+      - SETUID
+      - CHOWN
+      - DAC_OVERRIDE
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+volumes:
+  mysql_data:
+
+networks:
+  app-network:
+    driver: overlay
