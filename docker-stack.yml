@@ -26,7 +26,7 @@ services:
           - node.role == manager
 
   web-app-1:
-    image: parzivalxix/alternance-tah-les-fous:${VERSION}
+    image: parzivalxix/alternance-tah-les-fous:${VERSION:-3.1-dev}
     env_file:
       - .env
     healthcheck:
