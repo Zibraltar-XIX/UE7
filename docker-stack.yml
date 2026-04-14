@@ -5,17 +5,17 @@ services:
       - "--providers.swarm=true"
       - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
       - "--providers.swarm.exposedbydefault=false"
-      - "--providers.swarm.network=app-network"
+      - "--providers.swarm.network=alternance-tah-les-fous_app-network"
       - "--entrypoints.web.address=:80"
       - "--api.insecure=true"
       - "--log.level=INFO"
     ports:
       - target: 80
         published: 80
-        mode: host
+        mode: ingress
       - target: 8080
         published: 8080
-        mode: host
+        mode: ingress
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
@@ -26,14 +26,15 @@ services:
           - node.role == manager
 
   web-app-1:
-    image: parzivalxix/alternance-tah-les-fous:${APP_VERSION:-3.0}
+    image: parzivalxix/alternance-tah-les-fous:${VERSION}
     env_file:
       - .env
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
       interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 30s
     networks:
       - app-network
     cap_drop:
@@ -49,15 +50,16 @@ services:
         delay: 2h
         order: start-first
         failure_action: rollback
-        monitor: 5m
+        monitor: 2m
       rollback_config:
         parallelism: 1
         delay: 30s
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.web-app.rule=Host(`alternance-tah-les-fous.fr`, `127.0.0.1`, `localhost`)"
+        - "traefik.http.routers.web-app.rule=Host(`alternance-tah-les-fous.fr`) || Host(`127.0.0.1`) || Host(`localhost`)"
         - "traefik.http.services.web-app.loadbalancer.healthcheck.path=/health"
         - "traefik.http.services.web-app.loadbalancer.server.port=5000"
+        - "traefik.swarm.network=alternance-tah-les-fous_app-network"
 
   db:
     image: mysql:9.6
