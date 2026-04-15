@@ -135,6 +135,7 @@ kind: Service
 metadata:
   name: web-app-service
 spec:
+  type: LoadBalancer
   selector:
     app: web-app
   ports:
@@ -142,16 +143,16 @@ spec:
       targetPort: 5000
 
 
-##########################################
-##### Exposition extérieur via Nginx #####
-##########################################
+############################################
+##### Exposition extérieur via traefik #####
+############################################
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: web-app-ingress
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   rules:
     - http:
         paths:
