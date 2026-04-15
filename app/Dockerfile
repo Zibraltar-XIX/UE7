@@ -1,4 +1,4 @@
-FROM python:3.14-slim
+FROM python:3.14-slim AS build
 
 # Dossier de l'app python
 WORKDIR /app
