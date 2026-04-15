@@ -1,0 +1,15 @@
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+  - name: app-secrets
+    envs:
+      - .env
+
+configMapGenerator:
+  - name: mysql-init-script
+    files:
+      - init/main.sql
+
+resources:
+  - k3s-stack.yaml
