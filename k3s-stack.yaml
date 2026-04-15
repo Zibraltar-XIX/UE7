@@ -1,3 +1,6 @@
+####################################################
+##### Ajout d'un volume pour les données MySQL #####
+####################################################
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -9,6 +12,11 @@ spec:
   resources:
     requests:
       storage: 5Gi
+
+
+################################
+##### Déploiement de MySQL #####
+################################
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -48,6 +56,11 @@ spec:
         - name: mysql-init
           configMap:
             name: mysql-init-script
+
+
+########################################################
+##### Exposition de MySQL à l'intérieur du cluster #####
+########################################################
 ---
 apiVersion: v1
 kind: Service
@@ -60,6 +73,10 @@ spec:
     - port: 3306
       targetPort: 3306
 
+
+##############################################
+##### Déploiement de l'application Flask #####
+##############################################
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -107,6 +124,11 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 6
+
+
+####################################################################
+##### Exposition des conteneurs Flask à l'intérieur du cluster #####
+####################################################################
 ---
 apiVersion: v1
 kind: Service
@@ -118,6 +140,11 @@ spec:
   ports:
     - port: 80
       targetPort: 5000
+
+
+##########################################
+##### Exposition extérieur via Nginx #####
+##########################################
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
