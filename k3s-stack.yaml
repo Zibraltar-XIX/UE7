@@ -94,7 +94,7 @@ spec:
     spec:
       containers:
         - name: flask-app
-          image: parzivalxix/alternance-tah-les-fous:3.1
+          image: ghcr.io/zibraltar-xix/alternance-tah-les-fous:3.1
           envFrom:
             - secretRef:
                 name: app-secrets

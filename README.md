@@ -1,3 +1,9 @@
+# Versionning
+
+Liste des fichiers à modifier pour chaque version :
+- .env
+- pipeline.yaml
+
 # Docker Swarm
 
 **Démarrer docker swarm :** ```docker swarm init```
@@ -11,3 +17,7 @@
 **Rollback manuel :** ```docker service rollback alternance-tah-les-fous_web-app-1```
 
 **Supprimer la stack (hors volume) :** ```docker stack rm alternance-tah-les-fous```
+
+# K3s
+
+**Lancer le k3s :** ```kubectl apply -k .```
