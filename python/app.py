@@ -22,7 +22,7 @@ app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_fol
 try:
     if os.getenv("ENV_CONFIG") == "false":
         app.logger.warning("Fichier .env non configuré")
-except Exception as e:
+except :
     app.logger.error("Fichier .env non trouvé")
     exit(1)
 
