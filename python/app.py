@@ -19,12 +19,8 @@ SITE_DIR = os.path.join(BASE_DIR, "site")
 app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_folder=SITE_DIR, static_url_path='/site')
 
 # Vérification du .env
-try:
-    if os.getenv("ENV_CONFIG") == "false":
-        app.logger.warning("Fichier .env non configuré")
-except :
-    app.logger.error("Fichier .env non trouvé")
-    exit(1)
+if os.getenv("ENV_CONFIG") == "false":
+    app.logger.warning("Fichier .env non configuré")
 
 app.jinja_env.autoescape = True
 app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
