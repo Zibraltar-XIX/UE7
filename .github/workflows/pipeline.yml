@@ -141,7 +141,7 @@ jobs:
       - name: Build & Push
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./app/Dockerfile
           push: ${{ github.event_name == 'push' }} 
           tags: |
             ghcr.io/${{ env.REPO }}:latest
