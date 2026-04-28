@@ -4,14 +4,12 @@ on:
     branches:
       - main
       - develop
-      - deploy/render
-    # paths:
-      # - '**/*.py'
+    paths:
+      - '**/*.py'
   pull_request:
     branches:
       - main
       - develop
-      - deploy/render
     paths:
       - '**/*.py'
   workflow_dispatch:
@@ -44,17 +42,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      #semgrep :
+      - name: install semgrep
+        run: python3 -m pip install semgrep
+      - name: run semgrep
+        run: semgrep --config .semgrep/custom-rules.yml --error .
+
       #bandit :
       - name: install bandit
         run: pip install bandit
       - name: run bandit
         run: bandit -r ./python/app.py --severity-level=high 
-
-      #semgrep :
-      - name: install semgrep
-        run: python3 -m pip install semgrep
-      - name: run semgrep
-        run: semgrep --config=auto .
 
       #pip-audit :
       - name: install pip-audit
