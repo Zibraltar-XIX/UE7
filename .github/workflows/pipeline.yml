@@ -12,8 +12,8 @@ on:
       - main
       - develop
       - deploy/render
-    paths:
-      - '**/*.py'
+    # paths:
+      # - '**/*.py'
   workflow_dispatch:
 jobs:
 
