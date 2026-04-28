@@ -92,7 +92,7 @@ def save_upload(field_name, category, user_id):
 ###########################################
 
 # Route de santé de l'application
-@app.route('/health')
+@app.route('/health123456789')
 @csrf.exempt
 def health():
     return '', 200
