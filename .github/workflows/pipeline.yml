@@ -78,8 +78,6 @@ jobs:
           echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
           echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
           echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> .env
-      - name: verify .env
-        run: cat .env | cut -d'=' -f1
       - name: build image
         run: docker build -t ue7-app:latest -f ./app/Dockerfile .
 
@@ -87,33 +85,7 @@ jobs:
         run: curl -sSfL https://get.anchore.io/grype | sudo sh -s -- -b /usr/local/bin
       - name: Scan Docker Image with Grype
         run: grype ue7-app:latest
-      
       - run: docker compose up -d --build
-      - name: check le conteneur
-        run: docker ps -a
-      - name: Curl inside web container
-        run: |
-          docker exec ue7-web-app-1 python - <<'PY'
-          import urllib.request
-          r = urllib.request.urlopen("http://127.0.0.1:5000/", timeout=5)
-          print(r.status)
-          print(r.read(200))
-          PY
-      - name: logs app web
-        if: always()
-        run: docker compose logs --no-color web-app
-
-      - name: logs db
-        if: always()
-        run: docker compose logs --no-color db
-
-      - name: inspection app web
-        if: always()
-        run: docker inspect ue7-web-app-1 --format='{{.RestartCount}}'
-
-      - name: docker log pour erreur
-        if: always()
-        run: docker compose logs --no-color
       - uses: thereisnotime/action-nikto@master
         with:
           url: "http://127.0.0.1:5000"
