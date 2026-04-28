@@ -1,4 +1,4 @@
-import os, mysql.connector
+import os, mysql.connector, platform
 from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, redirect, session, flash
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -16,7 +16,13 @@ from flask_limiter.util import get_remote_address
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SITE_DIR = os.path.join(BASE_DIR, "site")
 
+# Configuration de Flask
 app = Flask(__name__, template_folder=os.path.join(SITE_DIR, "html"), static_folder=SITE_DIR, static_url_path='/site')
+
+# Vérification du .env
+if os.getenv("ENV_CONFIG") == "false":
+    app.logger.warning("Fichier .env non configuré")
+
 app.jinja_env.autoescape = True
 app.config['UPLOAD_FOLDER'] = os.path.join(SITE_DIR, "uploads")
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
@@ -39,7 +45,11 @@ def inject_auth_state():
 
 # Connection a la base de donnée
 def db_connection():
-    conn = mysql.connector.connect(host="db", user=os.getenv("MYSQL_USER"), password=os.getenv("MYSQL_PASSWORD"), database=os.getenv("MYSQL_DATABASE"))
+    try:
+        conn = mysql.connector.connect(host="db", user=os.getenv("MYSQL_USER"), password=os.getenv("MYSQL_PASSWORD"), database=os.getenv("MYSQL_DATABASE"))
+    except mysql.connector.Error as err:
+        app.logger.error(f"Erreur de connexion à la base de donnees : {err}")
+        raise
     return conn
 
 # Sauvegarder les fichiers
@@ -47,13 +57,16 @@ def save_upload(field_name, category, user_id):
     # Obtenir le fichier
     file = request.files.get(field_name)
 
-    # JSP
     if not file or not file.filename:
         return ''
 
     # Selectionner le bon répertoire
     category_dir = os.path.join(app.config['UPLOAD_FOLDER'], category)
-    os.makedirs(category_dir, exist_ok=True)
+    try:
+        os.makedirs(category_dir, exist_ok=True)
+    except OSError as err:
+        app.logger.error(f"Erreur lors de la creation du repertoire {category_dir} : {err}")
+        raise
 
     # Obtenir l'extension
     original_filename = secure_filename(file.filename)
@@ -66,7 +79,11 @@ def save_upload(field_name, category, user_id):
 
     filename = f"{category}-{user_id}.{extension}"
     save_path = os.path.join(category_dir, filename)
-    file.save(save_path)
+    try:
+        file.save(save_path)
+    except Exception as err:
+        app.logger.error(f"Erreur lors de la sauvegarde du fichier {save_path} : {err}")
+        raise
 
     return f'/uploads/{category}/{filename}'
 
@@ -116,12 +133,15 @@ def profil():
         return redirect('/login')
 
     # Obtention des données de l'utilisateur
-    conn = db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM Utilisateurs WHERE id = %s", (user_id,))
-    row = cursor.fetchone()
-    cursor.close()
-    conn.close()
+    try:
+        conn = db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM Utilisateurs WHERE id = %s", (user_id,))
+        row = cursor.fetchone()
+    except Exception as err:
+        app.logger.error(f"Erreur lors de la récupération des données utilisateur pour l'id {user_id} : {err}")
+        return "Erreur interne du serveur", 500
+
 
     # Si le user id est erroné, on le déconnecte
     if row is None:
@@ -151,55 +171,60 @@ def profil():
             return jsonify({'status': 'error', 'message': str(err)}), 400
 
         # On met a jour la db
-        cursor = conn.cursor()
-        cursor.execute("""UPDATE Utilisateurs SET 
-                Prenom = %s,
-                Nom = %s,
-                Email = %s,
-                Telephone = %s,
-                Role = %s,
-                Adresse = %s,
-                Web = %s,
-                Linkedin = %s,
-                Github = %s,
-                Portfolio = %s,
-                Loisirs = %s,
-                Emplois = %s,
-                Competences = %s,
-                Description = %s
-            WHERE id = %s
-            """,
-            (
-                prenom,
-                nom,
-                email,
-                telephone,
-                role,
-                adresse,
-                web,
-                linkedin,
-                github,
-                portfolio,
-                loisirs,
-                emplois,
-                competences,
-                description,
-                user_id
-            )
-        )
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""UPDATE Utilisateurs SET
+                                                      Prenom = %s,
+                                                      Nom = %s,
+                                                      Email = %s,
+                                                      Telephone = %s,
+                                                      Role = %s,
+                                                      Adresse = %s,
+                                                      Web = %s,
+                                                      Linkedin = %s,
+                                                      Github = %s,
+                                                      Portfolio = %s,
+                                                      Loisirs = %s,
+                                                      Emplois = %s,
+                                                      Competences = %s,
+                                                      Description = %s
+                              WHERE id = %s
+                           """,
+                           (
+                               prenom,
+                               nom,
+                               email,
+                               telephone,
+                               role,
+                               adresse,
+                               web,
+                               linkedin,
+                               github,
+                               portfolio,
+                               loisirs,
+                               emplois,
+                               competences,
+                               description,
+                               user_id
+                           )
+                           )
 
-        if pdp:
-            cursor.execute("UPDATE Utilisateurs SET PdP = %s WHERE id = %s", (pdp, user_id))
+            if pdp:
+                cursor.execute("UPDATE Utilisateurs SET PdP = %s WHERE id = %s", (pdp, user_id))
 
-        if cv:
-            cursor.execute("UPDATE Utilisateurs SET CV = %s WHERE id = %s", (cv, user_id))
+            if cv:
+                cursor.execute("UPDATE Utilisateurs SET CV = %s WHERE id = %s", (cv, user_id))
 
-        if lm:
-            cursor.execute("UPDATE Utilisateurs SET LM = %s WHERE id = %s", (lm, user_id))
+            if lm:
+                cursor.execute("UPDATE Utilisateurs SET LM = %s WHERE id = %s", (lm, user_id))
 
-        conn.commit()
-        cursor.close()
-        conn.close()
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except Exception as err:
+            app.logger.error(f"Erreur lors de la mise a jour des données utilisateur pour l'id {user_id} : {err}")
+            return "Erreur interne du serveur", 500
+
         return jsonify({'status': 'success'})
 
     # Chargement des données utilisateur
@@ -235,16 +260,31 @@ def login():
         return render_template('login.html')
 
     # Obtention des credentials
-    email = request.form.get('email').strip().lower()
-    password = request.form.get('password')
+    try:
+        email = request.form.get('email').strip().lower()
+        password = request.form.get('password')
+    except Exception as err:
+        app.logger.error(f"Erreur lors de l'obtention des credentials : {err}")
+        return render_template("login.html", error="Erreur lors de l'obtention des credentials"), 400
 
     # Connection à la DB
-    db = db_connection()
-    cursor = db.cursor(dictionary=True)
+    try:
+        db = db_connection()
+        cursor = db.cursor(dictionary=True)
+    except Exception as err:
+        app.logger.error(f"Erreur lors de la connexion à la base de données : {err}")
+        return render_template("login.html", error="Erreur de connexion à la base de données")
 
     # Tentative d'obtention des info de l'utilisateur renseigné
-    cursor.execute("SELECT id, MotDePasse FROM Utilisateurs WHERE Email = %s", (email,))
-    row = cursor.fetchone()
+    try:
+        cursor.execute("SELECT id, MotDePasse FROM Utilisateurs WHERE Email = %s", (email,))
+        row = cursor.fetchone()
+    except Exception as err:
+        app.logger.error(f"Erreur lors de la récupération des données utilisateur pour l'email {email} : {err}")
+        cursor.close()
+        db.close()
+        return render_template("login.html", error="Erreur interne du serveur"), 500
+
     if row is None:
         cursor.close()
         db.close()
@@ -273,35 +313,55 @@ def register():
         return render_template('register.html', error=None)
 
     # Obtention des informations
-    nom = request.form.get('nom', '').strip()
-    prenom = request.form.get('prenom', '').strip()
-    numero = request.form.get('numero', '').strip()
-    email = request.form.get('email').strip().lower()
-    user_type = request.form.get('user_type', '').strip()
-    password = request.form.get('password', '')
-    confirm = request.form.get('confirm_password', '')
-    adresse = request.form.get('ecole', '').strip()
+    try:
+        nom = request.form.get('nom', '').strip()
+        prenom = request.form.get('prenom', '').strip()
+        numero = request.form.get('numero', '').strip()
+        email = request.form.get('email').strip().lower()
+        user_type = request.form.get('user_type', '').strip()
+        password = request.form.get('password', '')
+        confirm = request.form.get('confirm_password', '')
+        adresse = request.form.get('ecole', '').strip()
+    except Exception as err:
+        app.logger.error(f"Erreur lors de l'obtention des informations d'inscription : {err}")
+        return render_template("register.html", error="Erreur lors de l'obtention des informations"), 400
 
     if password != confirm:
         return render_template("register.html", error="Les mots de passe ne correspondent pas."), 400
 
     # Connexion à la DB
-    conn = db_connection()
-    cursor = conn.cursor(dictionary=True)
+    try:
+        conn = db_connection()
+        cursor = conn.cursor(dictionary=True)
+    except Exception as err:
+        app.logger.error(f"Erreur lors de la connexion à la base de données : {err}")
+        return render_template("register.html", error="Erreur de connexion à la base de données"), 500
 
     # Vérification que l'utilisateur n'existe pas
-    cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
-    if cursor.fetchone() is not None:
-        return render_template("register.html", error="Utilisateur deja enregistre"), 409
+    try:
+        cursor.execute("SELECT id FROM Utilisateurs WHERE Email = %s", (email,))
+        if cursor.fetchone() is not None:
+            return render_template("register.html", error="Utilisateur deja enregistre"), 409
+    except Exception as err:
+        app.logger.error(f"Erreur lors de la vérification de l'existence de l'utilisateur pour l'email {email} : {err}")
+        cursor.close()
+        conn.close()
+        return render_template("register.html", error="Erreur interne du serveur"), 500
 
     # Enregistrement de l'utilisateur
-    cursor.execute(
-        "INSERT INTO Utilisateurs (`Prenom`, `Nom`, Telephone, Email, Role, Adresse, MotDePasse) "
-        "VALUES (%s, %s, %s, %s, %s, %s, %s)",
-        (prenom, nom, numero, email, user_type, adresse, generate_password_hash(password))
-    )
-    conn.commit()
-    user_id = cursor.lastrowid
+    try:
+        cursor.execute(
+            "INSERT INTO Utilisateurs (`Prenom`, `Nom`, Telephone, Email, Role, Adresse, MotDePasse) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (prenom, nom, numero, email, user_type, adresse, generate_password_hash(password))
+        )
+        conn.commit()
+        user_id = cursor.lastrowid
+    except Exception as err:
+        app.logger.error(f"Erreur lors de l'enregistrement de l'utilisateur pour l'email {email} : {err}")
+        cursor.close()
+        conn.close()
+        return render_template("register.html", error="Erreur interne du serveur"), 500
 
     # Déconnexion à la DB
     cursor.close()
@@ -322,20 +382,34 @@ def publication():
 
     if request.method == "POST":
         # Obtention des données de l'annonce
-        titre = request.form.get("titre", "").strip()
-        contrat = request.form.get("contrat", "").strip()
-        description = request.form.get("description", "").strip()
+        try:
+            titre = request.form.get("titre", "").strip()
+            contrat = request.form.get("contrat", "").strip()
+            description = request.form.get("description", "").strip()
+        except Exception as err:
+            app.logger.error(f"Erreur lors de l'obtention des données de l'annonce : {err}")
+            return render_template("publication.html", error="Erreur lors de l'obtention des données"), 400
 
         # Connexion à la DB
-        db = db_connection()
-        cursor = db.cursor()
+        try:
+            db = db_connection()
+            cursor = db.cursor()
+        except Exception as err:
+            app.logger.error(f"Erreur lors de la connexion à la base de données : {err}")
+            return render_template("publication.html", error="Erreur de connexion à la base de données"), 500
 
         # Publication de l'annonce
-        cursor.execute(
-            "INSERT INTO Annonce (id_Utilisateur, Description, Titre, Contrat) VALUES (%s, %s, %s, %s)",
-            (user_id, description, titre, contrat),
-        )
-        db.commit()
+        try:
+            cursor.execute(
+                "INSERT INTO Annonce (id_Utilisateur, Description, Titre, Contrat) VALUES (%s, %s, %s, %s)",
+                (user_id, description, titre, contrat),
+            )
+            db.commit()
+        except Exception as err:
+            app.logger.error(f"Erreur lors de la publication de l'annonce pour l'utilisateur id {user_id} : {err}")
+            cursor.close()
+            db.close()
+            return render_template("publication.html", error="Erreur interne du serveur"), 500
 
         # Déconnexion à la DB
         cursor.close()
@@ -366,8 +440,12 @@ def recherche():
 
     if keywords :
         # Connexion à la DB
-        conn = db_connection()
-        cursor = conn.cursor(dictionary=True)
+        try:
+            conn = db_connection()
+            cursor = conn.cursor(dictionary=True)
+        except Exception as err:
+            app.logger.error(f"Erreur lors de la connexion à la base de données : {err}")
+            return render_template("recherche.html", profils=[], annonces=[], error="Erreur de connexion à la base de données"), 500
 
         # Recherche des annonces
         if contrat:
@@ -379,26 +457,81 @@ def recherche():
         query = "SELECT * FROM Annonce"
         if conditions_annonces:
             query += " WHERE " + " AND ".join(conditions_annonces)
-        cursor.execute(query, tuple(params_annonces))
-        annonces = cursor.fetchall()
+
+        try:
+            cursor.execute(query, tuple(params_annonces))
+            annonces = cursor.fetchall()
+        except Exception as err:
+            app.logger.error(f"Erreur lors de la recherche des annonces avec les mots-clés {keywords} et contrat {contrat} : {err}")
+            cursor.close()
+            conn.close()
+            return render_template("recherche.html", profils=[], annonces=[], error="Erreur interne du serveur lors de la recherche des annonces"), 500
 
         # Recherche des profils
         for word in keywords:
             conditions_profils.append("(Nom LIKE %s OR Prenom LIKE %s)")
             params_profils.extend([f"%{word}%", f"%{word}%"])
         query = f"SELECT * FROM Utilisateurs WHERE {' AND '.join(conditions_profils)}"
-        cursor.execute(query, tuple(params_profils))
-        profils = cursor.fetchall()
+        try:
+            cursor.execute(query, tuple(params_profils))
+            profils = cursor.fetchall()
+        except Exception as err:
+            app.logger.error(f"Erreur lors de la recherche des profils avec les mots-clés {keywords} : {err}")
+            cursor.close()
+            conn.close()
+            return render_template("recherche.html", profils=[], annonces=[], error="Erreur interne du serveur lors de la recherche des profils"), 500
 
 
     return render_template("recherche.html", profils=profils, annonces=annonces)
-
 
 # Déconnexion
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/')
+
+# Route pour avoir les infos de l'app
+@app.route("/info", methods=["GET"])
+def info():
+    app_info = {
+        "Application name": os.getenv("APP_NAME", "unknown"),
+        "Application version": os.getenv("VERSION", "unknown"),
+        "Application mode": os.getenv("APP_MODE", "unknown"),
+        "Application port": os.getenv("PORT", "unknown"),
+    }
+    system_info = {
+        "Python version": platform.python_version(),
+        "Hostname": platform.node(),
+    }
+    return jsonify({"App": app_info, "System": system_info})
+
+# Route pour vérifier l'état de l'app
+@app.route("/health", methods=["GET"])
+def health():
+    app.logger.info("Appel de l'endpoint /health")
+    # Vérification que l'application fonctionne
+    try:
+        # Vérification que la DB est accessible
+        conn = db_connection()
+        if conn.is_connected():
+            conn.close()
+            return jsonify({
+                "status": "success",
+                "message": "L'application et la DB fonctionnent correctement"
+            }), 200
+        else:
+            app.logger.warning("L'application fonctionne mais pas la DB")
+            return jsonify({
+                "status": "fail",
+                "message": "Erreur de connexion a la base de donnees"
+            }), 500
+
+    except Exception as e:
+        app.logger.error(f"Erreur lors du healthcheck : {e}")
+        return jsonify({
+            "status": "fail",
+            "message": "Erreur interne du serveur lors de la verification"
+        }), 500
 
 # Sécuriser les requêtes Flask
 @app.after_request

@@ -1,13 +1,13 @@
 name: pipeline
 on:
   push:
-    # branches: [main, develop]
-    # paths:
-    #   - '**/*.py'
+    branches: [main, develop]
+    paths:
+      - '**/*.py'
   pull_request:
-    # branches: [main, develop]
-    # paths:
-    #   - '**/*.py'
+    branches: [main, develop]
+    paths:
+      - '**/*.py'
   workflow_dispatch:
 jobs:
 
@@ -29,6 +29,7 @@ jobs:
           ignore: "E501,E401,W291,W293,E128,E266,E302,E203,E303"
           max-line-length: "100"
           path: "./python/app.py"
+
 
       #gitleaks :
       - uses: gitleaks/gitleaks-action@v2
@@ -57,8 +58,22 @@ jobs:
     name: build image
     runs-on: ubuntu-latest
     needs: security-test
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: create .env file
+        run: |
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
+          echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> .env
+          echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> .env
+      - name: verify .env
+        run: cat .env | cut -d'=' -f1
       - name: build image
         run: docker build -t ue7-app:latest -f ./app/Dockerfile .
 
@@ -66,16 +81,6 @@ jobs:
         run: curl -sSfL https://get.anchore.io/grype | sudo sh -s -- -b /usr/local/bin
       - name: Scan Docker Image with Grype
         run: grype ue7-app:latest
-      - name: create .env file
-        run: |
-          cat <<EOF > .env
-          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-          MYSQL_USER=${{ secrets.MYSQL_USER }}
-          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-          MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-          SECRET_KEY=${{ secrets.SECRET_KEY }}
-          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          EOF
       
       - run: docker compose up -d --build
       - name: check le conteneur
@@ -103,7 +108,17 @@ jobs:
       - name: docker log pour erreur
         if: always()
         run: docker compose logs --no-color
-
       - uses: thereisnotime/action-nikto@master
         with:
           url: "http://127.0.0.1:5000"
+
+      - name: push ghcr
+        if: github.ref == 'refs/heads/main'
+        run: |
+          VERSION=4.0
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker tag ue7-app:latest ghcr.io/zibraltar-xix/alternance-tah-les-fous:$VERSION
+          docker push ghcr.io/zibraltar-xix/alternance-tah-les-fous:$VERSION
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          docker tag ue7-app:latest parzivalxix/alternance-tah-les-fous:$VERSION
+          docker push parzivalxix/alternance-tah-les-fous:$VERSION

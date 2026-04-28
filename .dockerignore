@@ -1,7 +1,5 @@
 .git
 .gitignore
-.env
-.env.*
 .idea
 mysql_data
 fakesecret
