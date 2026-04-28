@@ -5,8 +5,8 @@ on:
       - main
       - develop
       - deploy/render
-    paths:
-      - '**/*.py'
+    # paths:
+      # - '**/*.py'
   pull_request:
     branches:
       - main
