@@ -1,0 +1,40 @@
+rules:
+  - id: no-debug-true
+    message: "debug=True is prohibited in production"
+    severity: ERROR
+    languages:
+      - python
+    pattern-either:
+      - pattern: $X(debug=True, ...)
+      - pattern: $X.run(debug=True, ...)
+      - pattern: debug = True
+
+  - id: no-md5-sha1
+    message: "MD5/SHA1 is prohibited, use SHA-256"
+    severity: ERROR
+    languages:
+      - python
+    pattern-either:
+      - pattern: hashlib.md5(...)
+      - pattern: hashlib.sha1(...)
+      - pattern: hashlib.new("md5", ...)
+      - pattern: hashlib.new("sha1", ...)
+
+  - id: no-eval-exec
+    message: "eval/exec is prohibited in production"
+    severity: ERROR
+    languages:
+      - python
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: exec(...)
+
+  - id: no-shell-true
+    message: "shell=True is prohibited in production"
+    severity: ERROR
+    languages:
+      - python
+    pattern-either:
+      - pattern: subprocess.run(..., shell=True, ...)
+      - pattern: subprocess.Popen(..., shell=True, ...)
+      - pattern: os.system(...)
