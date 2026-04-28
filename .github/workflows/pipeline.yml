@@ -4,12 +4,14 @@ on:
     branches:
       - main
       - develop
-    paths:
-      - '**/*.py'
+      - deploy/render
+    # paths:
+      # - '**/*.py'
   pull_request:
     branches:
       - main
       - develop
+      - deploy/render
     paths:
       - '**/*.py'
   workflow_dispatch:
