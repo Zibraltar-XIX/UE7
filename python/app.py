@@ -91,6 +91,12 @@ def save_upload(field_name, category, user_id):
 ########## Définition des routes ##########
 ###########################################
 
+# Route de santé de l'application
+@app.route('/health123456789')
+@csrf.exempt
+def health123456789():
+    return '', 200
+
 # Pouvoir obtenir les ressources dans uploads
 @app.route('/uploads/<category>/<filename>')
 @csrf.exempt
